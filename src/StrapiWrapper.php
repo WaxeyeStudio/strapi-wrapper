@@ -40,13 +40,13 @@ class StrapiWrapper
         if (!in_array($this->authMethod, $allowedAuthMethods, true)) throw new UnknownAuthMethod();
     }
 
-    protected function generateQueryUrl(string $type, string $sortBy, string $sortOrder, int $limit, int $page): string
+    protected function generateQueryUrl(string $type, string $sortBy, string $sortOrder, int $limit, int $page, string $customQuery = ''): string
     {
         if ($this->apiVersion === 3) {
             return $this->apiUrl . '/' . $type . '?_sort=' . $sortBy . ':' . $sortOrder . '&_limit=' . $limit . '&_start=' . $page;
-        } else {
-            return $this->apiUrl . '/' . $type . '?sort=' . $sortBy . ':' . $sortOrder . '&pagination[pageSize]=' . $limit . '&pagination[page]=' . $page . '&populate=*';
         }
+
+        return $this->apiUrl . '/' . $type . '?sort=' . $sortBy . ':' . $sortOrder . '&pagination[pageSize]=' . $limit . '&pagination[page]=' . $page . $customQuery;
     }
 
     protected function generatePostUrl(string $type): string
@@ -112,9 +112,9 @@ class StrapiWrapper
         } finally {
             if ($login->ok()) {
                 return $login->json()['jwt'];
-            } else {
-                throw new PermissionDenied();
             }
+
+            throw new PermissionDenied();
         }
     }
 
@@ -134,9 +134,9 @@ class StrapiWrapper
         if (!$response->ok()) {
             if ($response->status() === 400) {
                 throw new BadRequest($query . ' ' . $response->body(), 400);
-            } else {
-                throw new UnknownError('Error posting to strapi on ' . $query, $response->status());
             }
+
+            throw new UnknownError('Error posting to strapi on ' . $query, $response->status());
         }
         return $response;
     }
@@ -153,14 +153,15 @@ class StrapiWrapper
             if (!$response->ok()) {
                 if ($response->status() === 400) {
                     throw new BadRequest($query . ' ' . $response->json(), 400);
-                } else {
-                    throw new UnknownError('Error posting to strapi on ' . $query, $response->status());
                 }
+
+                throw new UnknownError('Error posting to strapi on ' . $query, $response->status());
             }
             return $response;
-        } else {
-
         }
+
+        // TODO: implementation of multipart request for non authenticated requests
+        throw new UnknownError('Not authenticated');
     }
 
     protected function convertToAbsoluteUrls($array): array

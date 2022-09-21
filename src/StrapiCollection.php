@@ -24,11 +24,36 @@ class StrapiCollection extends StrapiWrapper
     private bool $absoluteUrl = false;
     private bool $convertMarkdown = false;
     private array $fields = [];
+    private array $populate = [];
 
     public function __construct(string $type)
     {
         parent::__construct();
         $this->type = $type;
+    }
+
+    public function getOneOrFail($failCode = 404)
+    {
+        try {
+            if ($result = $this->getOne()) {
+                return $result;
+            }
+        } catch (Exception $ex) {
+            Log::error($ex);
+            throw new UnknownError($ex);
+        }
+
+        abort($failCode);
+    }
+
+    public function getOne($cache = true)
+    {
+        $oldLimit = $this->limit;
+        $this->limit = 1;
+        $result = $this->get($cache);
+        $this->limit = $oldLimit;
+        if (isset($result[0])) return $result[0];
+        return null;
     }
 
     public function get($cache = true)
@@ -38,7 +63,8 @@ class StrapiCollection extends StrapiWrapper
             $this->sortBy,
             $this->sortOrder,
             $this->limit,
-            $this->page
+            $this->page,
+            $this->getPopulateQuery()
         );
 
         if (count($this->fields) > 0) {
@@ -70,28 +96,21 @@ class StrapiCollection extends StrapiWrapper
         return $this->collection;
     }
 
-    public function getOne($cache = true)
+    private function getPopulateQuery(): string
     {
-        $oldLimit = $this->limit;
-        $this->limit = 1;
-        $result = $this->get($cache);
-        $this->limit = $oldLimit;
-        if (isset($result[0])) return $result[0];
-        return null;
-    }
-
-    public function getOneOrFail($failCode = 404)
-    {
-        try {
-            if ($result = $this->getOne()) {
-                return $result;
-            }
-        } catch (Exception $ex) {
-            Log::error($ex);
-            throw new UnknownError($ex);
+        if (empty($this->populate)) {
+            return '&populate=*';
         }
 
-        abort($failCode);
+        $string = [];
+        foreach ($this->populate as $key => $value) {
+            if (is_numeric($key)) {
+                $string[] = "populate[$value][populate]=*";
+            } else {
+                $string[] = "populate[$key][populate]=$value";
+            }
+        }
+        return '&' . implode('&', $string);
     }
 
     /**
@@ -200,6 +219,12 @@ class StrapiCollection extends StrapiWrapper
     {
         $this->sortBy = $fieldName;
         $this->sortOrder = $ascending ? 'ASC' : 'DESC';
+        return $this;
+    }
+
+    public function populate(array $populateQuery = []): StrapiCollection
+    {
+        $this->populate = $populateQuery;
         return $this;
     }
 }
