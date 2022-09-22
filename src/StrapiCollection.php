@@ -85,7 +85,9 @@ class StrapiCollection extends StrapiWrapper
             $this->meta = ['response' => time()];
         } else {
             $data = $this->squashDataFields($data);
-            if (!is_null($data['meta'])) {
+            if (!isset($data['meta'])) {
+                $this->meta = ['response' => time()];
+            } else if (!is_null($data['meta'])) {
                 $this->meta = array_merge(['response' => time()], $data['meta']);
                 unset($data['meta']);
             }
