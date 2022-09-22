@@ -77,7 +77,9 @@ class StrapiCollection extends StrapiWrapper
 
         $data = $this->getRequest($url, $cache);
 
-        if (empty($data)) throw new UnknownError(" - Strapi returned no data");
+        if (empty($data)) {
+            throw new UnknownError(" - Strapi returned no data");
+        }
 
         if ($this->apiVersion === 3) {
             $this->meta = ['response' => time()];
@@ -89,8 +91,13 @@ class StrapiCollection extends StrapiWrapper
             }
         }
 
-        if ($this->absoluteUrl) $data = $this->convertToAbsoluteUrls($data);
-        if ($this->squashImage) $data = $this->convertImageFields($data);
+        if ($this->absoluteUrl) {
+            $data = $this->convertToAbsoluteUrls($data);
+        }
+
+        if ($this->squashImage) {
+            $data = $this->convertImageFields($data);
+        }
         $this->collection = $data;
 
         return $this->collection;
@@ -117,7 +124,7 @@ class StrapiCollection extends StrapiWrapper
      * @param int $limit
      * @return $this
      */
-    public function recent(int $limit = 20)
+    public function recent(int $limit = 20): static
     {
         $this->sortBy = $this->apiVersion === 3 ? 'published_at' : 'publishedAt';
         $this->limit = $limit;
@@ -168,6 +175,12 @@ class StrapiCollection extends StrapiWrapper
         return $this;
     }
 
+    /**
+     * Will tell the CMS to sort by the field indicated using the last set order.
+     * To change the order use $->order($sortBy, $ascending) method
+     * @param string $sortBy
+     * @return $this
+     */
     public function sort(string $sortBy): StrapiCollection
     {
         $this->sortBy = $sortBy;
@@ -206,7 +219,9 @@ class StrapiCollection extends StrapiWrapper
 
     public function field(string $fieldName)
     {
-        if (!isset($this->filters[$fieldName])) $this->fields[$fieldName] = new StrapiField($fieldName, $this);
+        if (!isset($this->filters[$fieldName])) {
+            $this->fields[$fieldName] = new StrapiField($fieldName, $this);
+        }
         return $this->fields[$fieldName];
     }
 
@@ -215,9 +230,16 @@ class StrapiCollection extends StrapiWrapper
         return $this->apiVersion;
     }
 
-    public function order(string $fieldName, bool $ascending = false): StrapiCollection
+    /**
+     * Will tell the CMS to sort by the field indicated and adjust the order.
+     * To just change the sort field use $->sort($sortBy) method
+     * @param string $sortBy
+     * @param bool $ascending
+     * @return $this
+     */
+    public function order(string $sortBy, bool $ascending = false): StrapiCollection
     {
-        $this->sortBy = $fieldName;
+        $this->sortBy = $sortBy;
         $this->sortOrder = $ascending ? 'ASC' : 'DESC';
         return $this;
     }
