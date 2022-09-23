@@ -19,3 +19,4 @@ All notable changes to `strapi-wrapper` will be documented in this file.
 - Fix an issue when trying to squash a non array dataset
 - Improve squash behavior for single returned collections
 - Clean up filter return values
+- Add deep filtering for strapi v4

@@ -37,7 +37,13 @@ class StrapiField
         $builder = [];
         foreach ($this->filters as $how => $by) {
             if ($this->collection->apiVersion() === 4) {
-                $builder[] = "filters[" . $this->name . "][$how]=" . urlencode($by);
+                // Check for deep filtering
+                $deep = explode('.', $this->name);
+                if (count($deep) > 1) {
+                    $builder[] = "filters[" . implode('][', $deep) . "][$how]=" . urlencode($by);
+                } else {
+                    $builder[] = "filters[" . $this->name . "][$how]=" . urlencode($by);
+                }
             }
         }
         return implode('&', $builder);
