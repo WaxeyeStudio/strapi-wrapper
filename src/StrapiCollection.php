@@ -123,6 +123,20 @@ class StrapiCollection extends StrapiWrapper
     }
 
     /**
+     * Query using a custom endpoint and fetch results
+     * @param string $customType
+     * @return array|null
+     */
+    public function getCustom(string $customType): array|null
+    {
+        $usualType = $this->type;
+        $this->type = $customType;
+        $response = $this->get(false);
+        $this->type = $usualType;
+        return $response;
+    }
+
+    /**
      * @param int $limit
      * @return $this
      */

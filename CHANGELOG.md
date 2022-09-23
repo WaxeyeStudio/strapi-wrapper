@@ -15,3 +15,4 @@ All notable changes to `strapi-wrapper` will be documented in this file.
 ## 0.1.2
 
 - Small fixes to catch meta responses not being set on strapi records
+- Add ability to set custom endpoint after the collection has been initialised
