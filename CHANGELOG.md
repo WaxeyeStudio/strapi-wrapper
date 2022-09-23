@@ -12,7 +12,7 @@ All notable changes to `strapi-wrapper` will be documented in this file.
   ```ie $collection->populate(['City', 'Person'])```
   will populate the records of those two fields
 
-## 0.1.2
+### 0.1.2 - 2022-09-23
 
 - Small fixes to catch meta responses not being set on strapi records
 - Add ability to set custom endpoint after the collection has been initialised
