@@ -129,9 +129,9 @@ class StrapiCollection extends StrapiWrapper
     /**
      * Query using a custom endpoint and fetch results
      * @param string $customType
-     * @return array|null
+     * @return mixed
      */
-    public function getCustom(string $customType): array|null
+    public function getCustom(string $customType): mixed
     {
         $usualType = $this->type;
         $this->type = $customType;
