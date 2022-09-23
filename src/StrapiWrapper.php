@@ -210,6 +210,11 @@ class StrapiWrapper
 
     protected function squashDataFields($array): array|null
     {
+        // Check if this response is an array, if not there is nothing to squash
+        if (!is_array($array)) {
+            return [$array];
+        }
+
         $modifiedArray = [];
         foreach ($array as $key => $item) {
             if (is_array($item)) {
