@@ -137,6 +137,9 @@ class StrapiCollection extends StrapiWrapper
         $this->type = $customType;
         $response = $this->get(false);
         $this->type = $usualType;
+        if (count($response) === 1 && isset($response[0])) {
+            return $response[0];
+        }
         return $response;
     }
 
