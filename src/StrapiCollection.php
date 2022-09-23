@@ -100,7 +100,13 @@ class StrapiCollection extends StrapiWrapper
         if ($this->squashImage) {
             $data = $this->convertImageFields($data);
         }
+
         $this->collection = $data;
+
+        // Final Squash if there is only one record
+        if (count($data) === 1 && isset($data[0])) {
+            return $data[0];
+        }
 
         return $this->collection;
     }
