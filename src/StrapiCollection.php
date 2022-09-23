@@ -70,7 +70,10 @@ class StrapiCollection extends StrapiWrapper
         if (count($this->fields) > 0) {
             $filters = [];
             foreach ($this->fields as $field) {
-                $filters[] = $field->url();
+                $url = $field->url();
+                if ($url) {
+                    $filters[] = $url;
+                }
             }
             $url .= '&' . implode('&', ($filters));
         }
