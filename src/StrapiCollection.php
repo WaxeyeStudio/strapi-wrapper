@@ -106,11 +106,6 @@ class StrapiCollection extends StrapiWrapper
 
         $this->collection = $data;
 
-        // Final Squash if there is only one record
-        if (count($data) === 1 && isset($data[0])) {
-            return $data[0];
-        }
-
         return $this->collection;
     }
 
