@@ -6,7 +6,10 @@ namespace SilentWeb\StrapiWrapper;
 use Exception;
 use GuzzleHttp\Promise\PromiseInterface;
 use Illuminate\Http\Client\Response;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
+use JsonException;
 use SilentWeb\StrapiWrapper\Exceptions\UnknownError;
 
 class StrapiCollection extends StrapiWrapper
@@ -46,26 +49,80 @@ class StrapiCollection extends StrapiWrapper
         abort($failCode);
     }
 
+    /**
+     * @throws JsonException
+     */
     public function getOne($cache = true)
     {
+        // Limit request to 1 item, but remember the collection limit
         $oldLimit = $this->limit;
         $this->limit = 1;
-        $result = $this->get($cache);
+
+        // We want to store the cache for individual items separately
+        $url = md5($this->getUrl());
+        if ($cache) {
+            $result = Cache::remember($url, Config::get('strapi-wrapper.cache'), function () {
+                return $this->get(false);
+            });
+        } else {
+            $result = $this->get(false);
+        }
+
+
+        // Return limit to collection default
         $this->limit = $oldLimit;
-        if (isset($result[0])) return $result[0];
+
+        // Squash the results if required.
+        if (isset($result[0])) {
+
+
+            // We also want to store in item cache if required by item ID
+            if ($cache) {
+                // First we work on the assumption that there is an "id" field.
+                // Or we generate one based on the data
+                $id = $result[0]['id'] ?? md5(json_encode($result, JSON_THROW_ON_ERROR));
+                Cache::put($id, $url, Config::get('strapi-wrapper.cache'));
+
+                $index = Cache::get($this->type . '_items', []);
+                $index[] = $id;
+                Cache::put($this->type . '_items', array_unique($index), Config::get('strapi-wrapper.cache'));
+            }
+
+            return $result[0];
+        }
         return null;
     }
 
-    public function get($cache = true)
+    public function getUrl(): string
     {
-        $url = $this->generateQueryUrl(
-            $this->type,
+        return $this->generateQueryUrl($this->type,
             $this->sortBy,
             $this->sortOrder,
             $this->limit,
             $this->page,
-            $this->getPopulateQuery()
-        );
+            $this->getPopulateQuery());
+    }
+
+    private function getPopulateQuery(): string
+    {
+        if (empty($this->populate)) {
+            return '&populate=*';
+        }
+
+        $string = [];
+        foreach ($this->populate as $key => $value) {
+            if (is_numeric($key)) {
+                $string[] = "populate[$value][populate]=*";
+            } else {
+                $string[] = "populate[$key][populate]=$value";
+            }
+        }
+        return '&' . implode('&', $string);
+    }
+
+    public function get($cache = true)
+    {
+        $url = $this->getUrl();
 
         if (count($this->fields) > 0) {
             $filters = [];
@@ -82,6 +139,11 @@ class StrapiCollection extends StrapiWrapper
 
         if (empty($data)) {
             throw new UnknownError(" - Strapi returned no data");
+        }
+
+        // Store index in cache so that we can clear entire collection (for when tags are not supported)
+        if ($cache) {
+            $this->storeCacheIndex($url);
         }
 
         if ($this->apiVersion === 3) {
@@ -109,21 +171,11 @@ class StrapiCollection extends StrapiWrapper
         return $this->collection;
     }
 
-    private function getPopulateQuery(): string
+    private function storeCacheIndex($requestUrl): void
     {
-        if (empty($this->populate)) {
-            return '&populate=*';
-        }
-
-        $string = [];
-        foreach ($this->populate as $key => $value) {
-            if (is_numeric($key)) {
-                $string[] = "populate[$value][populate]=*";
-            } else {
-                $string[] = "populate[$key][populate]=$value";
-            }
-        }
-        return '&' . implode('&', $string);
+        $index = Cache::get($this->type, []);
+        $index[] = $requestUrl;
+        Cache::put($this->type, array_unique($index), Config::get('strapi-wrapper.cache'));
     }
 
     /**
@@ -271,5 +323,38 @@ class StrapiCollection extends StrapiWrapper
     {
         $this->populate = $populateQuery;
         return $this;
+    }
+
+    public function clearCollectionCache(bool $includingItems = false): void
+    {
+        $this->clearCache($this->type);
+        if ($includingItems) {
+            $this->clearCache($this->type . '_items');
+        }
+    }
+
+    // Clear the entire collection cache (excluding items called with ->getOne())
+
+    private function clearCache($key): void
+    {
+        $cache = Cache::get($key, []);
+        if (is_array($cache)) {
+            foreach ($cache as $value) {
+                Cache::forget($value);
+            }
+        }
+
+        Cache::forget($key);
+    }
+
+    // Clear any cached item for the collection
+    public function clearItemCache($itemId): void
+    {
+        $cache = Cache::pull($this->type . '_items', []);
+        if (isset($cache[$itemId])) {
+            Cache::forget($cache[$itemId]);
+            unset($cache[$itemId]);
+        }
+        Cache::put($this->type . '_items', $cache, Config::get('strapi-wrapper.cache'));
     }
 }

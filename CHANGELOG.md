@@ -24,3 +24,8 @@ All notable changes to `strapi-wrapper` will be documented in this file.
 #### 0.1.3 - 2022-09-23 - Hotfix
 
 - Correct return type for custom query function
+
+#### 0.1.4 - 2022-09-27
+
+- Expand caching for collections
+- Provide methods for cleaning cache
