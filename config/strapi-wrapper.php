@@ -22,5 +22,12 @@ return [
     'token' => env('STRAPI_TOKEN', ''),
 
     // URL for Images (if different from API url)
-    'uploadUrl' => $uploadUrl
+    'uploadUrl' => $uploadUrl,
+
+    // For V4, if the "populate deep" plugin is installed, you may want to enable this option
+    // https://github.com/Barelydead/strapi-plugin-populate-deep
+    'populateDeep' => env('STRAPI_DEEP', 0),
+
+    'squashImage' => env('STRAPI_SQUASH', false),
+    'absoluteUrl' => env('STRAPI_ABSOLUTE', false),
 ];

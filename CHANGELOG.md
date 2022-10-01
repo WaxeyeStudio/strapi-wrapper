@@ -29,3 +29,8 @@ All notable changes to `strapi-wrapper` will be documented in this file.
 
 - Expand caching for collections
 - Provide methods for cleaning cache
+
+#### 0.1.5
+
+- More configuration options
+- Support for deep queries provided by https://github.com/Barelydead/strapi-plugin-populate-deep

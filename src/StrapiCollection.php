@@ -23,16 +23,20 @@ class StrapiCollection extends StrapiWrapper
     private int $limit = 100;
     private int $page = 0;
 
-    private bool $squashImage = false;
-    private bool $absoluteUrl = false;
+    private bool $squashImage;
+    private bool $absoluteUrl;
     private bool $convertMarkdown = false;
     private array $fields = [];
     private array $populate = [];
+    private int $deep;
 
     public function __construct(string $type)
     {
         parent::__construct();
         $this->type = $type;
+        $this->deep = config('strapi-wrapper.populateDeep');
+        $this->squashImage = config('strapi-wrapper.squashImage');
+        $this->absoluteUrl = config('strapi-wrapper.absoluteUrl');
     }
 
     public function getOneOrFail($failCode = 404)
@@ -106,6 +110,9 @@ class StrapiCollection extends StrapiWrapper
     private function getPopulateQuery(): string
     {
         if (empty($this->populate)) {
+            if ($this->deep > 0) {
+                return '&populate=deep,' . $this->deep;
+            }
             return '&populate=*';
         }
 
