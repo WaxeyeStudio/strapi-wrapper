@@ -99,12 +99,25 @@ class StrapiCollection extends StrapiWrapper
 
     public function getUrl(): string
     {
-        return $this->generateQueryUrl($this->type,
+        $url = $this->generateQueryUrl($this->type,
             $this->sortBy,
             $this->sortOrder,
             $this->limit,
             $this->page,
             $this->getPopulateQuery());
+
+        if (count($this->fields) > 0) {
+            $filters = [];
+            foreach ($this->fields as $field) {
+                $fieldUrl = $field->url();
+                if ($fieldUrl) {
+                    $filters[] = $fieldUrl;
+                }
+            }
+            $url .= '&' . implode('&', ($filters));
+        }
+
+        return $url;
     }
 
     private function getPopulateQuery(): string
@@ -130,18 +143,6 @@ class StrapiCollection extends StrapiWrapper
     public function get($cache = true)
     {
         $url = $this->getUrl();
-
-        if (count($this->fields) > 0) {
-            $filters = [];
-            foreach ($this->fields as $field) {
-                $fieldUrl = $field->url();
-                if ($fieldUrl) {
-                    $filters[] = $fieldUrl;
-                }
-            }
-            $url .= '&' . implode('&', ($filters));
-        }
-
         $data = $this->getRequest($url, $cache);
 
         if (empty($data)) {
