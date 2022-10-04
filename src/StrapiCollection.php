@@ -365,4 +365,13 @@ class StrapiCollection extends StrapiWrapper
         }
         Cache::put($this->type . '_items', $cache, Config::get('strapi-wrapper.cache'));
     }
+
+    public function clearAllFilters(bool $refresh = false): static
+    {
+        $this->fields = [];
+        if ($refresh) {
+            $this->get(false);
+        }
+        return $this;
+    }
 }

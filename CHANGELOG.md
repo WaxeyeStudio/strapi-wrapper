@@ -34,3 +34,7 @@ All notable changes to `strapi-wrapper` will be documented in this file.
 
 - More configuration options
 - Support for deep queries provided by https://github.com/Barelydead/strapi-plugin-populate-deep
+
+#### 0.1.6
+
+- added ability to mass clear all filters on collection
