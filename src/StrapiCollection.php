@@ -276,6 +276,12 @@ class StrapiCollection extends StrapiWrapper
         return $this;
     }
 
+    public function page(int $page): StrapiCollection
+    {
+        $this->page = $page;
+        return $this;
+    }
+
     public function post(array $fields): PromiseInterface|Response
     {
         $url = $this->generatePostUrl($this->type);
