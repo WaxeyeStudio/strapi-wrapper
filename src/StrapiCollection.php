@@ -186,6 +186,50 @@ class StrapiCollection extends StrapiWrapper
         Cache::put($this->type, array_unique($index), Config::get('strapi-wrapper.cache'));
     }
 
+    public function getOneByIdOrFail($id, $errorCode = 404): ?array
+    {
+        $data = $this->getOneById($id);
+        if (!$data) {
+            abort($errorCode);
+        }
+        return $data;
+    }
+
+    public function getOneById($id): array|null
+    {
+        $currentFilters = $this->fields;
+        $this->clearAllFilters();
+
+        // In a default strapi instance, the id can be fetched from /collection-name/id
+        // So we will try this first
+        $data = null;
+        try {
+            $data = $this->getCustom('/' . $id);
+        } catch (Exception $e) {
+            // This hasn't worked, so lets try querying the main collection
+            try {
+                $this->field('id')->filter('$eq', $id);
+                $data = $this->getOne();
+            } catch (Exception $e) {
+                // Still failed, so we return null;
+                $this->fields = $currentFilters;
+                return null;
+            }
+        }
+
+        $this->fields = $currentFilters;
+        return $data;
+    }
+
+    public function clearAllFilters(bool $refresh = false): static
+    {
+        $this->fields = [];
+        if ($refresh) {
+            $this->get(false);
+        }
+        return $this;
+    }
+
     /**
      * Query using a custom endpoint and fetch results
      * @param string $customType
@@ -201,6 +245,14 @@ class StrapiCollection extends StrapiWrapper
             return $response[0];
         }
         return $response;
+    }
+
+    public function field(string $fieldName)
+    {
+        if (!isset($this->filters[$fieldName])) {
+            $this->fields[$fieldName] = new StrapiField($fieldName, $this);
+        }
+        return $this->fields[$fieldName];
     }
 
     /**
@@ -306,14 +358,6 @@ class StrapiCollection extends StrapiWrapper
         return $this->postMulitpartRequest($url, $multipart);
     }
 
-    public function field(string $fieldName)
-    {
-        if (!isset($this->filters[$fieldName])) {
-            $this->fields[$fieldName] = new StrapiField($fieldName, $this);
-        }
-        return $this->fields[$fieldName];
-    }
-
     public function apiVersion()
     {
         return $this->apiVersion;
@@ -339,6 +383,8 @@ class StrapiCollection extends StrapiWrapper
         return $this;
     }
 
+    // Clear the entire collection cache (excluding items called with ->getOne())
+
     public function clearCollectionCache(bool $includingItems = false): void
     {
         $this->clearCache($this->type);
@@ -347,7 +393,7 @@ class StrapiCollection extends StrapiWrapper
         }
     }
 
-    // Clear the entire collection cache (excluding items called with ->getOne())
+    // Clear any cached item for the collection
 
     private function clearCache($key): void
     {
@@ -361,7 +407,6 @@ class StrapiCollection extends StrapiWrapper
         Cache::forget($key);
     }
 
-    // Clear any cached item for the collection
     public function clearItemCache($itemId): void
     {
         $cache = Cache::pull($this->type . '_items', []);
@@ -370,14 +415,5 @@ class StrapiCollection extends StrapiWrapper
             unset($cache[$itemId]);
         }
         Cache::put($this->type . '_items', $cache, Config::get('strapi-wrapper.cache'));
-    }
-
-    public function clearAllFilters(bool $refresh = false): static
-    {
-        $this->fields = [];
-        if ($refresh) {
-            $this->get(false);
-        }
-        return $this;
     }
 }
