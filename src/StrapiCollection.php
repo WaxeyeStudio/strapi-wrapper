@@ -29,6 +29,7 @@ class StrapiCollection extends StrapiWrapper
     private array $fields = [];
     private array $populate = [];
     private int $deep;
+    private bool $includeDrafts = false;
 
     public function __construct(string $type)
     {
@@ -115,6 +116,10 @@ class StrapiCollection extends StrapiWrapper
                 }
             }
             $url .= '&' . implode('&', ($filters));
+        }
+
+        if ($this->includeDrafts) {
+            $url .= '&publicationState=preview';
         }
 
         return $url;
@@ -286,7 +291,7 @@ class StrapiCollection extends StrapiWrapper
     public function setOptions(array $options): StrapiCollection
     {
         $configurableOptions = [
-            'absoluteUrl', 'squashImage',
+            'absoluteUrl', 'squashImage', 'includeDrafts',
             'sortBy', 'sortOrder', 'limit', 'page'
         ];
 
