@@ -194,8 +194,8 @@ class StrapiCollection extends StrapiWrapper
     public function getCustom(string $customType): mixed
     {
         $usualType = $this->type;
-        $this->type = $customType;
-        $response = $this->get(false);
+        $this->type .= $customType;
+        $response = $this->get();
         $this->type = $usualType;
         if (count($response) === 1 && isset($response[0])) {
             return $response[0];
