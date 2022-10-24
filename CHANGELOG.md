@@ -39,6 +39,6 @@ All notable changes to `strapi-wrapper` will be documented in this file.
 
 - added ability to mass clear all filters on collection
 
-#### 0.1.7 - 2022-10-25
+#### 0.1.9 - 2022-10-25
 
 - changes to error handling - more emphasis on user handling and increased logging
