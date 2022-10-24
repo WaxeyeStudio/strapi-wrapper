@@ -2,15 +2,12 @@
 
 namespace SilentWeb\StrapiWrapper\Exceptions;
 
-use JetBrains\PhpStorm\Pure;
-use RuntimeException;
 use Throwable;
 
-class UnknownError extends RuntimeException
+class UnknownError extends BaseException
 {
-    #[Pure] public function __construct(string $message = "", int $code = 0, ?Throwable $previous = null)
+    public function __construct(string $message = "", int $code = 0, ?Throwable $previous = null)
     {
-        parent::__construct("An Unknown Error has occurred" . $message, $code, $previous);
-        abort(503);
+        parent::__construct("An Unknown Error has occurred", $code, $message, $previous);
     }
 }
