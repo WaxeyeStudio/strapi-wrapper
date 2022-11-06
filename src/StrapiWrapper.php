@@ -174,8 +174,8 @@ class StrapiWrapper
             if (!is_string($item) || empty($item)) continue;
 
 
-            // If this is an image key - replace with URL in front
-            if ($key === 'url' && str_starts_with($item, '/')) $array[$key] = $this->imageUrl . $array[$key];
+            // If this is an image/file key - replace with URL in front
+            if ($key === 'url' && isset($array['ext']) && str_starts_with($item, '/')) $array[$key] = $this->imageUrl . $array[$key];
             else {
                 // NB: By default strapi returns markdown, but popular editor plugins make the return HTML
 

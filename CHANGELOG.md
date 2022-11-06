@@ -42,3 +42,7 @@ All notable changes to `strapi-wrapper` will be documented in this file.
 #### 0.1.9 - 2022-10-25
 
 - changes to error handling - more emphasis on user handling and increased logging
+
+#### 0.2.0 - 2022-11-07
+
+- fix to image handling and squashing
