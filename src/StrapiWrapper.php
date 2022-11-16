@@ -199,6 +199,7 @@ class StrapiWrapper
             if (is_array($item)) {
                 if (array_key_exists('url', $item) && array_key_exists('mime', $item)) {
                     $array[$key] = $item['url'];
+                    $array[$key . '_squash'] = $item;
                 } else {
                     $array[$key] = $this->convertImageFields($item);
                 }
