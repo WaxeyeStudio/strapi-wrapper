@@ -303,15 +303,23 @@ class StrapiCollection extends StrapiWrapper
         return $this;
     }
 
-    public function absolute(): StrapiCollection
+    /**
+     * Returned collection will have any file/image urls as absolutely set (if using local file store)
+     * @return $this
+     */
+    public function absolute(bool $setting = true): StrapiCollection
     {
-        $this->absoluteUrl = true;
+        $this->absoluteUrl = $setting;
         return $this;
     }
 
-    public function squash(): StrapiCollection
+    /**
+     * Returned collection will have any file/image fields squashed, as such just the url is returned.
+     * @return $this
+     */
+    public function squash(bool $setting = true): StrapiCollection
     {
-        $this->squashImage = true;
+        $this->squashImage = $setting;
         return $this;
     }
 
