@@ -10,6 +10,7 @@ class StrapiField
     private StrapiCollection $collection;
 
     private array $filters = [];
+    private $parent = null;
 
 
     public function __construct(string $fieldName, StrapiCollection $collection)
