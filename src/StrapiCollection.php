@@ -292,7 +292,7 @@ class StrapiCollection extends StrapiWrapper
     {
         $configurableOptions = [
             'absoluteUrl', 'squashImage', 'includeDrafts',
-            'sortBy', 'sortOrder', 'limit', 'page'
+            'sortBy', 'sortOrder', 'limit', 'page', 'deep'
         ];
 
         foreach ($options as $key => $value) {
@@ -369,6 +369,18 @@ class StrapiCollection extends StrapiWrapper
         }
 
         return $this->postMulitpartRequest($url, $multipart);
+    }
+
+    /**
+     * If not specifying which fields to populate, will try to populate $depth levels when performing a get request
+     * note, this requires https://github.com/Barelydead/strapi-plugin-populate-deep to be installed on the strapi server
+     * @param int $depth
+     * @return $this
+     */
+    public function deep(int $depth = 1): StrapiCollection
+    {
+        $this->deep = $depth;
+        return $this;
     }
 
     public function apiVersion()

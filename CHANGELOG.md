@@ -46,3 +46,8 @@ All notable changes to `strapi-wrapper` will be documented in this file.
 #### 0.2.0 - 2022-11-07
 
 - fix to image handling and squashing
+
+#### 0.2.1 - 2022-11-21
+
+- configurable depth options per collection
+- some prep work for better field handling
