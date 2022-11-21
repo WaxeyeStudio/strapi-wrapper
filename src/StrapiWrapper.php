@@ -102,6 +102,7 @@ class StrapiWrapper
 
     private function loginStrapi()
     {
+        $login = null;
         try {
             $login = Http::post($this->apiUrl . '/auth/local', [
                 "identifier" => $this->username,
