@@ -110,7 +110,7 @@ class StrapiWrapper
         } catch (Throwable $th) {
             throw new UnknownError($th);
         } finally {
-            if ($login->ok()) {
+            if ($login && $login->ok()) {
                 return $login->json()['jwt'];
             }
 
