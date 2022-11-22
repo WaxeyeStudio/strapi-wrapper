@@ -42,11 +42,12 @@ class StrapiWrapper
 
     protected function generateQueryUrl(string $type, string $sortBy, string $sortOrder, int $limit, int $page, string $customQuery = ''): string
     {
+        $concat = str_contains($type, '?') ? '&' : '?';
         if ($this->apiVersion === 3) {
-            return $this->apiUrl . '/' . $type . '?_sort=' . $sortBy . ':' . $sortOrder . '&_limit=' . $limit . '&_start=' . $page;
+            return $this->apiUrl . '/' . $type . $concat . '_sort=' . $sortBy . ':' . $sortOrder . '&_limit=' . $limit . '&_start=' . $page;
         }
 
-        return $this->apiUrl . '/' . $type . '?sort=' . $sortBy . ':' . $sortOrder . '&pagination[pageSize]=' . $limit . '&pagination[page]=' . $page . $customQuery;
+        return $this->apiUrl . '/' . $type . $concat . 'sort=' . $sortBy . ':' . $sortOrder . '&pagination[pageSize]=' . $limit . '&pagination[page]=' . $page . $customQuery;
     }
 
     protected function generatePostUrl(string $type): string

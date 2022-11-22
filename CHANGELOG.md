@@ -51,3 +51,7 @@ All notable changes to `strapi-wrapper` will be documented in this file.
 
 - configurable depth options per collection
 - some prep work for better field handling
+
+#### 0.2.3 - 2022-11-22
+
+- add support for custom types with parameters
