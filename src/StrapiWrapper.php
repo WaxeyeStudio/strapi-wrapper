@@ -16,7 +16,7 @@ class StrapiWrapper
 {
     protected int $apiVersion;
     protected int $cacheTimeout;
-
+    protected array $squashedData = [];
     private string $apiUrl;
     private string $imageUrl;
     private string $username;
@@ -195,15 +195,27 @@ class StrapiWrapper
         return $array;
     }
 
-    protected function convertImageFields($array): array
+    protected function convertImageFields($array, $parent = null): array
     {
+        if (!$parent) {
+            // Reset squash data
+            $this->squashedData = [];
+            $parent = '';
+        }
+
         foreach ($array as $key => $item) {
             if (is_array($item)) {
                 if (array_key_exists('url', $item) && array_key_exists('mime', $item)) {
                     $array[$key] = $item['url'];
-                    $array[$key . '_squash'] = $item;
+                    if (!is_numeric($key)) {
+                        // To make things easier, for non array images we can store attributes alongside
+                        $array[$key . '_squash'] = $item;
+                    }
+
+                    // We also should store the squashed data separately
+                    $this->squashedData[$parent . $key] = $item;
                 } else {
-                    $array[$key] = $this->convertImageFields($item);
+                    $array[$key] = $this->convertImageFields($item, $parent . $key . '.');
                 }
             }
         }

@@ -55,3 +55,7 @@ All notable changes to `strapi-wrapper` will be documented in this file.
 #### 0.2.3 - 2022-11-22
 
 - add support for custom types with parameters
+
+#### 0.2.4 - 2022-11-28
+
+- fix an issue for storing image attributes with multi image objects
