@@ -361,14 +361,25 @@ class StrapiCollection extends StrapiWrapper
             'data' => json_encode($fields, JSON_THROW_ON_ERROR),
         ];
         foreach ($files as $field => $file) {
-            $multipart['multipart'][] = [
-                'name' => $field,
-                'contents' => fopen($file['path'], 'rb'),
-                'filename' => $file['name'] ?? null
-            ];
+            if (is_array($file) && !isset($file['path'])) {
+                foreach ($file as $f) {
+                    $multipart['multipart'][] = $this->prepInputFileArray($field, $f);
+                }
+            } else {
+                $multipart['multipart'][] = $this->prepInputFileArray($field, $file);
+            }
         }
 
         return $this->postMulitpartRequest($url, $multipart);
+    }
+
+    private function prepInputFileArray(string $name, array $file): array
+    {
+        return [
+            'name' => $name,
+            'contents' => fopen($file['path'], 'rb'),
+            'filename' => $file['name'] ?? null
+        ];
     }
 
     /**

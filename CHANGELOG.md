@@ -59,3 +59,7 @@ All notable changes to `strapi-wrapper` will be documented in this file.
 #### 0.2.4 - 2022-11-28
 
 - fix an issue for storing image attributes with multi image objects
+
+#### 0.2.5 - 2022-12-12
+
+- fix an issue for uploading multiple files
