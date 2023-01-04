@@ -63,3 +63,4 @@ All notable changes to `strapi-wrapper` will be documented in this file.
 #### 0.2.5 - 2022-12-12
 
 - fix an issue for uploading multiple files
+- fix an issue for direct uploading to api

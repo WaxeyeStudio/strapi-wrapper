@@ -143,12 +143,17 @@ class StrapiWrapper
         return $response;
     }
 
-    protected function postMulitpartRequest($query, $content): PromiseInterface|Response
+    protected function postMultipartRequest($query, $content): PromiseInterface|Response
     {
         if ($this->authMethod !== 'public') {
             $client = Http::withToken($this->getToken())->asMultipart();
             foreach ($content['multipart'] as $file) {
-                $client->attach('files.' . $file['name'], $file['contents'], $file['filename'] ?? null);
+                $name = 'files';
+                if ($file['name'] !== 'files') {
+                    $name .= '.' . $file['name'];
+                }
+
+                $client->attach($name, $file['contents'], $file['filename'] ?? null);
             }
 
             $response = $client->post($query, ['data' => $content['data']]);

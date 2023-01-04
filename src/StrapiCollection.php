@@ -370,7 +370,7 @@ class StrapiCollection extends StrapiWrapper
             }
         }
 
-        return $this->postMulitpartRequest($url, $multipart);
+        return $this->postMultipartRequest($url, $multipart);
     }
 
     private function prepInputFileArray(string $name, array $file): array
