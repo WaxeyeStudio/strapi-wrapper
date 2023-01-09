@@ -36,8 +36,13 @@ class StrapiWrapper
         $this->cacheTimeout = config('strapi-wrapper.cache');
 
         $allowedAuthMethods = ['public', 'password'];
-        if ($this->apiVersion >= 4) $allowedAuthMethods[] = 'token';
-        if (!in_array($this->authMethod, $allowedAuthMethods, true)) throw new UnknownAuthMethod();
+        if ($this->apiVersion >= 4) {
+            $allowedAuthMethods[] = 'token';
+        }
+
+        if (!in_array($this->authMethod, $allowedAuthMethods, true)) {
+            throw new UnknownAuthMethod();
+        }
     }
 
     protected function generateQueryUrl(string $type, string $sortBy, string $sortOrder, int $limit, int $page, string $customQuery = ''): string
@@ -74,18 +79,22 @@ class StrapiWrapper
             $response = Http::withToken($this->getToken())->get($request);
         }
 
-        if ($response->ok()) return $response->json();
-        else throw new UnknownError();
+        if ($response->ok()) {
+            return $response->json();
+        }
+
+        throw new UnknownError($response->body());
     }
 
     private function getToken($preventLoop = false): string
     {
-        if ($this->authMethod === 'token') return $this->token;
-        else {
-            $token = Cache::remember('strapi-token', 600, function () {
-                return self::loginStrapi();
-            });
+        if ($this->authMethod === 'token') {
+            return $this->token;
         }
+
+        $token = Cache::remember('strapi-token', 600, function () {
+            return self::loginStrapi();
+        });
 
         try {
             $decodedToken = json_decode(base64_decode(str_replace('_', '/', str_replace('-', '+', explode('.', $token)[1]))), false);
@@ -175,15 +184,20 @@ class StrapiWrapper
     {
         foreach ($array as $key => $item) {
             // If value is array, call func on self to check values
-            if (is_array($item)) $array[$key] = $this->convertToAbsoluteUrls($item);
+            if (is_array($item)) {
+                $array[$key] = $this->convertToAbsoluteUrls($item);
+            }
 
             // If value is null or empty, stop
-            if (!is_string($item) || empty($item)) continue;
+            if (!is_string($item) || empty($item)) {
+                continue;
+            }
 
 
             // If this is an image/file key - replace with URL in front
-            if ($key === 'url' && isset($array['ext']) && str_starts_with($item, '/')) $array[$key] = $this->imageUrl . $array[$key];
-            else {
+            if ($key === 'url' && isset($array['ext']) && str_starts_with($item, '/')) {
+                $array[$key] = $this->imageUrl . $array[$key];
+            } else {
                 // NB: By default strapi returns markdown, but popular editor plugins make the return HTML
 
                 // If HTML Text
