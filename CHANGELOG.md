@@ -68,3 +68,5 @@ All notable changes to `strapi-wrapper` will be documented in this file.
 #### 0.2.6 - 2023-01-10
 
 - small tidy of core file
+- BREAKING CHANGES TO FILTER
+- added simple filtering with AND and OR
