@@ -17,6 +17,7 @@ class StrapiWrapper
     protected int $apiVersion;
     protected int $cacheTimeout;
     protected array $squashedData = [];
+    protected int $timeout;
     private string $apiUrl;
     private string $imageUrl;
     private string $username;
@@ -34,6 +35,7 @@ class StrapiWrapper
         $this->token = config('strapi-wrapper.token');
         $this->authMethod = config('strapi-wrapper.auth');
         $this->cacheTimeout = config('strapi-wrapper.cache');
+        $this->timeout = config('strapi-wrapper.timeout');
 
         $allowedAuthMethods = ['public', 'password'];
         if ($this->apiVersion >= 4) {
@@ -64,9 +66,9 @@ class StrapiWrapper
     private function getRequestActual($request)
     {
         if ($this->authMethod === 'public') {
-            $response = Http::timeout(60)->get($request);
+            $response = Http::timeout($this->timeout)->get($request);
         } else {
-            $response = Http::timeout(60)->withToken($this->getToken())->get($request);
+            $response = Http::timeout($this->timeout)->withToken($this->getToken())->get($request);
         }
 
         if ($response->ok()) {
@@ -104,7 +106,7 @@ class StrapiWrapper
     {
         $login = null;
         try {
-            $login = Http::timeout(60)->post($this->apiUrl . '/auth/local', [
+            $login = Http::timeout($this->timeout)->post($this->apiUrl . '/auth/local', [
                 "identifier" => $this->username,
                 "password" => $this->password
             ]);
@@ -117,6 +119,15 @@ class StrapiWrapper
 
             throw new PermissionDenied();
         }
+    }
+
+    public function setTimeout(int $timeout): StrapiWrapper
+    {
+        if ($timeout) {
+            $this->timeout = $timeout;
+        }
+
+        return $this;
     }
 
     public function strapiPost($query, $content, $files = null): PromiseInterface|Response
@@ -135,7 +146,7 @@ class StrapiWrapper
     protected function postMultipartRequest($query, $content): PromiseInterface|Response
     {
         if ($this->authMethod !== 'public') {
-            $client = Http::timeout(60)->withToken($this->getToken())->asMultipart();
+            $client = Http::timeout($this->timeout)->withToken($this->getToken())->asMultipart();
             foreach ($content['multipart'] as $file) {
                 $name = 'files';
                 if ($file['name'] !== 'files') {
@@ -167,10 +178,10 @@ class StrapiWrapper
                 $content = ['data' => $content];
             }
 
-            $response = Http::timeout(60)->withToken($this->getToken())->post($query, $content);
+            $response = Http::timeout($this->timeout)->withToken($this->getToken())->post($query, $content);
 
         } else {
-            $response = Http::timeout(60)->post($query, $content);
+            $response = Http::timeout($this->timeout)->post($query, $content);
         }
 
         if (!$response->ok()) {
@@ -185,12 +196,12 @@ class StrapiWrapper
 
     public function put($query, $content = [])
     {
-        Http::timeout(60)->put($this->apiUrl . $query, $content);
+        Http::timeout($this->timeout)->put($this->apiUrl . $query, $content);
     }
 
     public function delete($query, $content = [])
     {
-        Http::timeout(60)->delete($this->apiUrl . $query, $content);
+        Http::timeout($this->timeout)->delete($this->apiUrl . $query, $content);
     }
 
     protected function generateQueryUrl(string $type, string $sortBy, string $sortOrder, int $limit, int $page, string $customQuery = ''): string

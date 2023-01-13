@@ -30,4 +30,7 @@ return [
 
     'squashImage' => env('STRAPI_SQUASH', false),
     'absoluteUrl' => env('STRAPI_ABSOLUTE', false),
+
+    // Wait time for curl
+    'timeout' => env('STRAPI_TIMEOUT', 60)
 ];
