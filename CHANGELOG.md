@@ -74,3 +74,5 @@ All notable changes to `strapi-wrapper` will be documented in this file.
 ### 0.2.7
 
 - begin prep for other Http function
+- add timeout variable for curl
+- add deprecated warnings

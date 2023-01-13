@@ -47,6 +47,9 @@ class StrapiWrapper
         }
     }
 
+    /**
+     * @deprecated deprecated since version 0.2.7
+     */
     public function strapiGet($query, $cache = false)
     {
         return $this->getRequest($this->apiUrl . $query, $cache);
@@ -240,6 +243,7 @@ class StrapiWrapper
                 // NB: By default strapi returns markdown, but popular editor plugins make the return HTML
 
                 // If HTML Text
+                /** @noinspection RegExpDuplicateCharacterInClass */
                 $html_pattern = '/<img([^>]*) src=[\'|"][^http|ftp|https]([^"|^\']*)\"/';
                 $html_rewrite = "<img\${1} src=\"" . $this->imageUrl . "/\${2}\"";
 

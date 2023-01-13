@@ -25,9 +25,8 @@ class StrapiCollection extends StrapiWrapper
 
     private bool $squashImage;
     private bool $absoluteUrl;
-    private bool $convertMarkdown = false;
     private array $fields = [];
-    private array $populate = [];
+    private array|null $populate = [];
     private int $deep;
     private bool $includeDrafts = false;
 
@@ -40,10 +39,24 @@ class StrapiCollection extends StrapiWrapper
         $this->absoluteUrl = config('strapi-wrapper.absoluteUrl');
     }
 
-    public function getOneOrFail($failCode = 404)
+    /**
+     * @param int $failCode
+     * @return mixed
+     * @deprecated since version 0.2.7, use findOneOrFail() instead
+     */
+    public function getOneOrFail(int $failCode = 404): mixed
+    {
+        return $this->findOneOrFail($failCode);
+    }
+
+    /**
+     * @param int $failCode
+     * @return mixed
+     */
+    public function findOneOrFail(int $failCode = 404): mixed
     {
         try {
-            if ($result = $this->getOne()) {
+            if ($result = $this->findOne()) {
                 return $result;
             }
         } catch (Exception $ex) {
@@ -57,7 +70,7 @@ class StrapiCollection extends StrapiWrapper
     /**
      * @throws JsonException
      */
-    public function getOne($cache = true)
+    public function findOne($cache = true)
     {
         // Limit request to 1 item, but remember the collection limit
         $oldLimit = $this->limit;
@@ -67,10 +80,10 @@ class StrapiCollection extends StrapiWrapper
         $url = md5($this->getUrl());
         if ($cache) {
             $result = Cache::remember($url, Config::get('strapi-wrapper.cache'), function () {
-                return $this->get(false);
+                return $this->query(false);
             });
         } else {
-            $result = $this->get(false);
+            $result = $this->query(false);
         }
 
 
@@ -98,6 +111,9 @@ class StrapiCollection extends StrapiWrapper
         return null;
     }
 
+    /**
+     * @return string
+     */
     public function getUrl(): string
     {
         $url = $this->generateQueryUrl($this->type,
@@ -131,6 +147,11 @@ class StrapiCollection extends StrapiWrapper
             if ($this->deep > 0) {
                 return '&populate=deep,' . $this->deep;
             }
+
+            if (is_null($this->populate)) {
+                return "";
+            }
+
             return '&populate=*';
         }
 
@@ -145,7 +166,21 @@ class StrapiCollection extends StrapiWrapper
         return '&' . implode('&', $string);
     }
 
-    public function get($cache = true)
+    /**
+     * @param bool $cache
+     * @return array|mixed
+     * @deprecated since version 0.2.7, use query() instead.
+     */
+    public function get(bool $cache = true): mixed
+    {
+        return $this->query($cache);
+    }
+
+    /**
+     * @param bool $cache
+     * @return array|mixed
+     */
+    public function query(bool $cache = true): mixed
     {
         $url = $this->getUrl();
         $data = $this->getRequest($url, $cache);
@@ -163,9 +198,9 @@ class StrapiCollection extends StrapiWrapper
             $this->meta = ['response' => time()];
         } else {
             $data = $this->squashDataFields($data);
-            if (!isset($data['meta'])) {
+            if (empty($data['meta'])) {
                 $this->meta = ['response' => time()];
-            } else if (!is_null($data['meta'])) {
+            } else {
                 $this->meta = array_merge(['response' => time()], $data['meta']);
                 unset($data['meta']);
             }
@@ -191,16 +226,36 @@ class StrapiCollection extends StrapiWrapper
         Cache::put($this->type, array_unique($index), Config::get('strapi-wrapper.cache'));
     }
 
-    public function getOneByIdOrFail($id, $errorCode = 404): ?array
+    /**
+     * @param $id
+     * @param int $errorCode
+     * @return array|null
+     * @deprecated since version 0.2.7, use findOneByIdOrFail() instead.
+     */
+    public function getOneByIdOrFail($id, int $errorCode = 404): ?array
     {
-        $data = $this->getOneById($id);
+        return $this->findOneByIdOrFail($id, $errorCode);
+    }
+
+    /**
+     * @param $id
+     * @param int $errorCode
+     * @return array|null
+     */
+    public function findOneByIdOrFail($id, int $errorCode = 404): ?array
+    {
+        $data = $this->findOneById($id);
         if (!$data) {
             abort($errorCode);
         }
         return $data;
     }
 
-    public function getOneById($id): array|null
+    /**
+     * @param int $id
+     * @return array|null
+     */
+    public function findOneById(int $id): array|null
     {
         $currentFilters = $this->fields;
         $this->clearAllFilters();
@@ -212,11 +267,13 @@ class StrapiCollection extends StrapiWrapper
             $data = $this->getCustom('/' . $id);
         } catch (Exception $e) {
             // This hasn't worked, so lets try querying the main collection
+            Log::debug('Custom query failed first attempt', $e->getTrace());
             try {
                 $this->field('id')->filter('$eq', $id);
-                $data = $this->getOne();
+                $data = $this->findOne();
             } catch (Exception $e) {
                 // Still failed, so we return null;
+                Log::debug('Custom query failed second attempt', $e->getTrace());
                 $this->fields = $currentFilters;
                 return null;
             }
@@ -226,11 +283,15 @@ class StrapiCollection extends StrapiWrapper
         return $data;
     }
 
+    /**
+     * @param bool $refresh
+     * @return $this
+     */
     public function clearAllFilters(bool $refresh = false): static
     {
         $this->fields = [];
         if ($refresh) {
-            $this->get(false);
+            $this->query(false);
         }
         return $this;
     }
@@ -244,7 +305,7 @@ class StrapiCollection extends StrapiWrapper
     {
         $usualType = $this->type;
         $this->type .= $customType;
-        $response = $this->get();
+        $response = $this->query();
         $this->type = $usualType;
         if (count($response) === 1 && isset($response[0])) {
             return $response[0];
@@ -252,12 +313,35 @@ class StrapiCollection extends StrapiWrapper
         return $response;
     }
 
-    public function field(string $fieldName)
+    /**
+     * @param string $fieldName
+     * @return mixed|StrapiField
+     */
+    public function field(string $fieldName): mixed
     {
         if (!isset($this->filters[$fieldName])) {
             $this->fields[$fieldName] = new StrapiField($fieldName, $this);
         }
         return $this->fields[$fieldName];
+    }
+
+    /**
+     * @param $id
+     * @return array|null
+     * @deprecated since version 0.2.7, use findOneById() instead
+     */
+    public function getOneById($id): array|null
+    {
+        return $this->findOneById($id);
+    }
+
+    /**
+     * @throws JsonException
+     * @deprecated since version 0.2.7, use findOne() instead
+     */
+    public function getOne($cache = true)
+    {
+        return $this->findOne($cache);
     }
 
     /**
@@ -274,6 +358,7 @@ class StrapiCollection extends StrapiWrapper
 
     /**
      * @return array
+     * @deprecated since version 0.2.7, use collection() instead
      */
     public function getCollection(): array
     {
@@ -281,13 +366,36 @@ class StrapiCollection extends StrapiWrapper
     }
 
     /**
+     * Returns the last query results
      * @return array
+     */
+    public function collection(): array
+    {
+        return $this->collection;
+    }
+
+    /**
+     * Gets the metadata for the last query performed
+     * @return array
+     */
+    public function meta(): array
+    {
+        return $this->meta;
+    }
+
+    /**
+     * @return array
+     * @deprecated since 0.2.7, use meta() instead
      */
     public function getMeta(): array
     {
         return $this->meta;
     }
 
+    /**
+     * @param array $options
+     * @return $this
+     */
     public function setOptions(array $options): StrapiCollection
     {
         $configurableOptions = [
@@ -335,24 +443,42 @@ class StrapiCollection extends StrapiWrapper
         return $this;
     }
 
+    /**
+     * @param string $limit
+     * @return $this
+     */
     public function limit(string $limit): StrapiCollection
     {
         $this->limit = $limit;
         return $this;
     }
 
+    /**
+     * @param int $page
+     * @return $this
+     */
     public function page(int $page): StrapiCollection
     {
         $this->page = $page;
         return $this;
     }
 
+    /**
+     * @param array $fields
+     * @return PromiseInterface|Response
+     */
     public function post(array $fields): PromiseInterface|Response
     {
         $url = $this->generatePostUrl($this->type);
         return $this->postRequest($url, $fields);
     }
 
+    /**
+     * @param array $fields
+     * @param array $files
+     * @return PromiseInterface|Response
+     * @throws JsonException
+     */
     public function postFiles(array $fields, array $files): PromiseInterface|Response
     {
         $url = $this->generatePostUrl($this->type);
@@ -394,7 +520,10 @@ class StrapiCollection extends StrapiWrapper
         return $this;
     }
 
-    public function apiVersion()
+    /**
+     * @return int
+     */
+    public function apiVersion(): int
     {
         return $this->apiVersion;
     }
@@ -413,6 +542,10 @@ class StrapiCollection extends StrapiWrapper
         return $this;
     }
 
+    /**
+     * @param array $populateQuery
+     * @return $this
+     */
     public function populate(array $populateQuery = []): StrapiCollection
     {
         $this->populate = $populateQuery;
@@ -421,6 +554,10 @@ class StrapiCollection extends StrapiWrapper
 
     // Clear the entire collection cache (excluding items called with ->getOne())
 
+    /**
+     * @param bool $includingItems
+     * @return void
+     */
     public function clearCollectionCache(bool $includingItems = false): void
     {
         $this->clearCache($this->type);
@@ -443,6 +580,10 @@ class StrapiCollection extends StrapiWrapper
         Cache::forget($key);
     }
 
+    /**
+     * @param $itemId
+     * @return void
+     */
     public function clearItemCache($itemId): void
     {
         $cache = Cache::pull($this->type . '_items', []);
