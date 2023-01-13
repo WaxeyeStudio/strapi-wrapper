@@ -70,3 +70,7 @@ All notable changes to `strapi-wrapper` will be documented in this file.
 - small tidy of core file
 - BREAKING CHANGES TO FILTER
 - added simple filtering with AND and OR
+
+### 0.2.7
+
+- begin prep for other Http function

@@ -24,7 +24,7 @@ class StrapiWrapper
     private string $token;
     private string $authMethod;
 
-    protected function __construct()
+    public function __construct()
     {
         $this->apiUrl = config('strapi-wrapper.url');
         $this->imageUrl = config('strapi-wrapper.uploadUrl');
@@ -45,19 +45,9 @@ class StrapiWrapper
         }
     }
 
-    protected function generateQueryUrl(string $type, string $sortBy, string $sortOrder, int $limit, int $page, string $customQuery = ''): string
+    public function strapiGet($query, $cache = false)
     {
-        $concat = str_contains($type, '?') ? '&' : '?';
-        if ($this->apiVersion === 3) {
-            return $this->apiUrl . '/' . $type . $concat . '_sort=' . $sortBy . ':' . $sortOrder . '&_limit=' . $limit . '&_start=' . $page;
-        }
-
-        return $this->apiUrl . '/' . $type . $concat . 'sort=' . $sortBy . ':' . $sortOrder . '&pagination[pageSize]=' . $limit . '&pagination[page]=' . $page . $customQuery;
-    }
-
-    protected function generatePostUrl(string $type): string
-    {
-        return $this->apiUrl . '/' . $type;
+        return $this->getRequest($this->apiUrl . $query, $cache);
     }
 
     protected function getRequest($request, $cache = true)
@@ -74,9 +64,9 @@ class StrapiWrapper
     private function getRequestActual($request)
     {
         if ($this->authMethod === 'public') {
-            $response = Http::get($request);
+            $response = Http::timeout(60)->get($request);
         } else {
-            $response = Http::withToken($this->getToken())->get($request);
+            $response = Http::timeout(60)->withToken($this->getToken())->get($request);
         }
 
         if ($response->ok()) {
@@ -114,7 +104,7 @@ class StrapiWrapper
     {
         $login = null;
         try {
-            $login = Http::post($this->apiUrl . '/auth/local', [
+            $login = Http::timeout(60)->post($this->apiUrl . '/auth/local', [
                 "identifier" => $this->username,
                 "password" => $this->password
             ]);
@@ -129,33 +119,23 @@ class StrapiWrapper
         }
     }
 
-    protected function postRequest($query, $content): PromiseInterface|Response
+    public function strapiPost($query, $content, $files = null): PromiseInterface|Response
     {
-        if ($this->authMethod !== 'public') {
-            if ($this->apiVersion === 4) {
-                $content = ['data' => $content];
-            }
 
-            $response = Http::withToken($this->getToken())->post($query, $content);
-
-        } else {
-            $response = Http::post($query, $content);
+        if ($files) {
+            return $this->postMultipartRequest($this->apiUrl . $query, [
+                'data' => $content,
+                'files' => $files
+            ]);
         }
 
-        if (!$response->ok()) {
-            if ($response->status() === 400) {
-                throw new BadRequest($query . ' ' . $response->body(), 400);
-            }
-
-            throw new UnknownError('Error posting to strapi on ' . $query, $response->status());
-        }
-        return $response;
+        return $this->postRequest($this->apiUrl . $query, $content);
     }
 
     protected function postMultipartRequest($query, $content): PromiseInterface|Response
     {
         if ($this->authMethod !== 'public') {
-            $client = Http::withToken($this->getToken())->asMultipart();
+            $client = Http::timeout(60)->withToken($this->getToken())->asMultipart();
             foreach ($content['multipart'] as $file) {
                 $name = 'files';
                 if ($file['name'] !== 'files') {
@@ -178,6 +158,54 @@ class StrapiWrapper
 
         // TODO: implementation of multipart request for non authenticated requests
         throw new UnknownError('Not authenticated');
+    }
+
+    protected function postRequest($query, $content): PromiseInterface|Response
+    {
+        if ($this->authMethod !== 'public') {
+            if ($this->apiVersion === 4) {
+                $content = ['data' => $content];
+            }
+
+            $response = Http::timeout(60)->withToken($this->getToken())->post($query, $content);
+
+        } else {
+            $response = Http::timeout(60)->post($query, $content);
+        }
+
+        if (!$response->ok()) {
+            if ($response->status() === 400) {
+                throw new BadRequest($query . ' ' . $response->body(), 400);
+            }
+
+            throw new UnknownError('Error posting to strapi on ' . $query, $response->status());
+        }
+        return $response;
+    }
+
+    public function put($query, $content = [])
+    {
+        Http::timeout(60)->put($this->apiUrl . $query, $content);
+    }
+
+    public function delete($query, $content = [])
+    {
+        Http::timeout(60)->delete($this->apiUrl . $query, $content);
+    }
+
+    protected function generateQueryUrl(string $type, string $sortBy, string $sortOrder, int $limit, int $page, string $customQuery = ''): string
+    {
+        $concat = str_contains($type, '?') ? '&' : '?';
+        if ($this->apiVersion === 3) {
+            return $this->apiUrl . '/' . $type . $concat . '_sort=' . $sortBy . ':' . $sortOrder . '&_limit=' . $limit . '&_start=' . $page;
+        }
+
+        return $this->apiUrl . '/' . $type . $concat . 'sort=' . $sortBy . ':' . $sortOrder . '&pagination[pageSize]=' . $limit . '&pagination[page]=' . $page . $customQuery;
+    }
+
+    protected function generatePostUrl(string $type): string
+    {
+        return $this->apiUrl . '/' . $type;
     }
 
     protected function convertToAbsoluteUrls($array): array
