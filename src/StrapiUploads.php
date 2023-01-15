@@ -13,7 +13,7 @@ class StrapiUploads extends StrapiWrapper
     {
         parent::__construct();
         if ($this->apiVersion === 4 && Str::endsWith($this->apiUrl, '/api')) {
-            $this->apiUrl = Str::substr($this->apiUrl, 0, -4) . '/uploads';
+            $this->apiUrl .= '/upload';
         }
     }
 
