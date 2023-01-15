@@ -18,12 +18,12 @@ class StrapiWrapper
     protected int $cacheTimeout;
     protected array $squashedData = [];
     protected int $timeout;
-    private string $apiUrl;
-    private string $imageUrl;
-    private string $username;
-    private string $password;
-    private string $token;
-    private string $authMethod;
+    protected string $apiUrl;
+    protected string $imageUrl;
+    protected string $username;
+    protected string $password;
+    protected string $token;
+    protected string $authMethod;
 
     public function __construct()
     {
@@ -81,7 +81,7 @@ class StrapiWrapper
         throw new UnknownError($response->body());
     }
 
-    private function getToken($preventLoop = false): string
+    protected function getToken($preventLoop = false): string
     {
         if ($this->authMethod === 'token') {
             return $this->token;
@@ -195,16 +195,6 @@ class StrapiWrapper
             throw new UnknownError('Error posting to strapi on ' . $query, $response->status());
         }
         return $response;
-    }
-
-    public function put($query, $content = [])
-    {
-        Http::timeout($this->timeout)->put($this->apiUrl . $query, $content);
-    }
-
-    public function delete($query, $content = [])
-    {
-        Http::timeout($this->timeout)->delete($this->apiUrl . $query, $content);
     }
 
     protected function generateQueryUrl(string $type, string $sortBy, string $sortOrder, int $limit, int $page, string $customQuery = ''): string
