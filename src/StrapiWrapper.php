@@ -6,6 +6,7 @@ use GuzzleHttp\Promise\PromiseInterface;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use SilentWeb\StrapiWrapper\Exceptions\BadRequest;
 use SilentWeb\StrapiWrapper\Exceptions\PermissionDenied;
 use SilentWeb\StrapiWrapper\Exceptions\UnknownAuthMethod;
@@ -162,7 +163,9 @@ class StrapiWrapper
             $response = $client->post($query, ['data' => $content['data']]);
             if (!$response->ok()) {
                 if ($response->status() === 400) {
-                    throw new BadRequest($query . ' ' . $response->json(), 400);
+                    $json = $response->json();
+                    Log::error("Post error", $json);
+                    throw new BadRequest($query . ' ' . $json['error']['name'] . ' - ' . $json['error']['message'], 400);
                 }
 
                 throw new UnknownError('Error posting to strapi on ' . $query, $response->status());
