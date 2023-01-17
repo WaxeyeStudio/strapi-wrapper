@@ -8,6 +8,7 @@ use GuzzleHttp\Promise\PromiseInterface;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use JsonException;
 use SilentWeb\StrapiWrapper\Exceptions\UnknownError;
@@ -224,6 +225,17 @@ class StrapiCollection extends StrapiWrapper
         $index = Cache::get($this->type, []);
         $index[] = $requestUrl;
         Cache::put($this->type, array_unique($index), Config::get('strapi-wrapper.cache'));
+    }
+
+    public function put(int $recordId, array $contents): PromiseInterface|Response
+    {
+        $putUrl = $this->apiUrl . '/' . $this->type . '/' . $recordId;
+
+        if ($this->authMethod === "public") {
+            return Http::timeout($this->timeout)->put($putUrl, $contents);
+        }
+
+        return Http::timeout($this->timeout)->withToken($this->getToken())->put($putUrl, $contents);
     }
 
     /**
@@ -542,6 +554,8 @@ class StrapiCollection extends StrapiWrapper
         return $this;
     }
 
+    // Clear the entire collection cache (excluding items called with ->getOne())
+
     /**
      * @param array $populateQuery
      * @return $this
@@ -552,7 +566,7 @@ class StrapiCollection extends StrapiWrapper
         return $this;
     }
 
-    // Clear the entire collection cache (excluding items called with ->getOne())
+    // Clear any cached item for the collection
 
     /**
      * @param bool $includingItems
@@ -565,8 +579,6 @@ class StrapiCollection extends StrapiWrapper
             $this->clearCache($this->type . '_items');
         }
     }
-
-    // Clear any cached item for the collection
 
     private function clearCache($key): void
     {
@@ -592,5 +604,16 @@ class StrapiCollection extends StrapiWrapper
             unset($cache[$itemId]);
         }
         Cache::put($this->type . '_items', $cache, Config::get('strapi-wrapper.cache'));
+    }
+
+    public function delete(int $recordId): PromiseInterface|Response
+    {
+        $deleteUrl = $this->apiUrl . '/' . $this->type . '/' . $recordId;
+
+        if ($this->authMethod === "public") {
+            return Http::timeout($this->timeout)->delete($deleteUrl);
+        }
+
+        return Http::timeout($this->timeout)->withToken($this->getToken())->delete($deleteUrl);
     }
 }
