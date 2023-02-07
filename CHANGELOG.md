@@ -81,3 +81,7 @@ All notable changes to `strapi-wrapper` will be documented in this file.
 
 - initial StrapiImage handler
 - Collection Update and delete
+
+### 0.2.9 - 2023-01-08
+
+- add cache findOne and getCustom

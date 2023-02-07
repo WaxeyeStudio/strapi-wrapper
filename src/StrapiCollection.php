@@ -252,11 +252,12 @@ class StrapiCollection extends StrapiWrapper
     /**
      * @param $id
      * @param int $errorCode
+     * @param bool $cache
      * @return array|null
      */
-    public function findOneByIdOrFail($id, int $errorCode = 404): ?array
+    public function findOneByIdOrFail($id, int $errorCode = 404, bool $cache = true): ?array
     {
-        $data = $this->findOneById($id);
+        $data = $this->findOneById($id, $cache);
         if (!$data) {
             abort($errorCode);
         }
@@ -265,9 +266,10 @@ class StrapiCollection extends StrapiWrapper
 
     /**
      * @param int $id
+     * @param bool $cache
      * @return array|null
      */
-    public function findOneById(int $id): array|null
+    public function findOneById(int $id, bool $cache = true): array|null
     {
         $currentFilters = $this->fields;
         $this->clearAllFilters();
@@ -276,13 +278,13 @@ class StrapiCollection extends StrapiWrapper
         // So we will try this first
         $data = null;
         try {
-            $data = $this->getCustom('/' . $id);
+            $data = $this->getCustom('/' . $id, $cache);
         } catch (Exception $e) {
             // This hasn't worked, so lets try querying the main collection
             Log::debug('Custom query failed first attempt', $e->getTrace());
             try {
                 $this->field('id')->filter('$eq', $id);
-                $data = $this->findOne();
+                $data = $this->findOne($cache);
             } catch (Exception $e) {
                 // Still failed, so we return null;
                 Log::debug('Custom query failed second attempt', $e->getTrace());
@@ -313,11 +315,11 @@ class StrapiCollection extends StrapiWrapper
      * @param string $customType
      * @return mixed
      */
-    public function getCustom(string $customType): mixed
+    public function getCustom(string $customType, bool $cache = true): mixed
     {
         $usualType = $this->type;
         $this->type .= $customType;
-        $response = $this->query();
+        $response = $this->query($cache);
         $this->type = $usualType;
         if (count($response) === 1 && isset($response[0])) {
             return $response[0];
