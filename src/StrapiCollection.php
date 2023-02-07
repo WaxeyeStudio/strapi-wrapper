@@ -54,10 +54,10 @@ class StrapiCollection extends StrapiWrapper
      * @param int $failCode
      * @return mixed
      */
-    public function findOneOrFail(int $failCode = 404): mixed
+    public function findOneOrFail(int $failCode = 404, bool $cache = true): mixed
     {
         try {
-            if ($result = $this->findOne()) {
+            if ($result = $this->findOne($cache)) {
                 return $result;
             }
         } catch (Exception $ex) {
@@ -313,6 +313,7 @@ class StrapiCollection extends StrapiWrapper
     /**
      * Query using a custom endpoint and fetch results
      * @param string $customType
+     * @param bool $cache
      * @return mixed
      */
     public function getCustom(string $customType, bool $cache = true): mixed
