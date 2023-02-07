@@ -52,6 +52,7 @@ class StrapiCollection extends StrapiWrapper
 
     /**
      * @param int $failCode
+     * @param bool $cache
      * @return mixed
      */
     public function findOneOrFail(int $failCode = 404, bool $cache = true): mixed
