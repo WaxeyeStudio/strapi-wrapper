@@ -289,6 +289,11 @@ class StrapiWrapper
         foreach ($array as $key => $item) {
             if (is_array($item)) {
                 if ($key === "attributes" || $key === "data") {
+                    if ($key === "data" && isset($modifiedArray['id'], $item['id'])) {
+                        $item['data_id'] = $item['id'];
+                        unset($item['id']);
+                    }
+
                     $modifiedArray = $this->squashDataFields(array_merge($modifiedArray, $item));
                 } else {
                     if (empty(array_filter($item, static function ($a) {
