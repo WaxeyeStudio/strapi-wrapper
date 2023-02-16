@@ -200,7 +200,7 @@ class StrapiWrapper
         return $response;
     }
 
-    protected function generateQueryUrl(string $type, string $sortBy, string $sortOrder, int $limit, int $page, string $customQuery = ''): string
+    protected function generateQueryUrl(string $type, string|array $sortBy, string $sortOrder, int $limit, int $page, string $customQuery = ''): string
     {
         $concat = str_contains($type, '?') ? '&' : '?';
         $url = [$type, $this->generateSortUrl($sortBy, $sortOrder)];
