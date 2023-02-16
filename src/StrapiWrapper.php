@@ -203,11 +203,48 @@ class StrapiWrapper
     protected function generateQueryUrl(string $type, string $sortBy, string $sortOrder, int $limit, int $page, string $customQuery = ''): string
     {
         $concat = str_contains($type, '?') ? '&' : '?';
-        if ($this->apiVersion === 3) {
-            return $this->apiUrl . '/' . $type . $concat . '_sort=' . $sortBy . ':' . $sortOrder . '&_limit=' . $limit . '&_start=' . $page;
+        $url = [$type, $this->generateSortUrl($sortBy, $sortOrder)];
+        if ($this->apiVersion === 4) {
+            $url[] = 'pagination[pageSize]=' . $limit;
+            $url[] = 'pagination[page]=' . $page;
+            $url[] = $customQuery;
+        } else {
+            $url[] = '_limit=' . $limit;
+            $url[] = '_start=' . $page;
+        }
+        $url = array_filter($url);
+
+        return $this->apiUrl . '/' . $type . $concat . implode('&', $url);
+    }
+
+    protected function generateSortUrl(string|array $sortBy = [], $defaultSortOrder = 'DESC'): ?string
+    {
+        if (empty($sortBy)) {
+            return null;
         }
 
-        return $this->apiUrl . '/' . $type . $concat . 'sort=' . $sortBy . ':' . $sortOrder . '&pagination[pageSize]=' . $limit . '&pagination[page]=' . $page . $customQuery;
+        $key = $this->apiVersion === 3 ? '_sort' : 'sort';
+
+
+        if (!is_array($sortBy)) {
+            return $key . '=' . $sortBy . ':' . $defaultSortOrder;
+        }
+
+        $string = [];
+        foreach ($sortBy as $index => $value) {
+            if (is_array($value)) {
+                // Two-dimensional with second sort value being the order
+                $sort = $value[0];
+                $order = $value[1] ?? $defaultSortOrder;
+            } else {
+                // One dimensional
+                $sort = $value;
+                $order = $defaultSortOrder;
+            }
+
+            $string[] = $key . '[' . $index . ']=' . $sort . ':' . $order;
+        }
+        return implode('&', $string);
     }
 
     protected function generatePostUrl(string $type): string

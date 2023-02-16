@@ -85,3 +85,7 @@ All notable changes to `strapi-wrapper` will be documented in this file.
 ### 0.2.9 - 2023-01-08
 
 - add cache findOne and getCustom
+
+### 0.3.0 - 2023-02-16
+
+- sort by multiple fields

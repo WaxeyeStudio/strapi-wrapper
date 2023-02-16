@@ -19,7 +19,7 @@ class StrapiCollection extends StrapiWrapper
     private array $meta = [];
 
     private string $type;
-    private string $sortBy = 'id';
+    private string|array $sortBy = [];
     private string $sortOrder = 'DESC';
     private int $limit = 100;
     private int $page = 0;
@@ -449,11 +449,12 @@ class StrapiCollection extends StrapiWrapper
 
     /**
      * Will tell the CMS to sort by the field indicated using the last set order.
+     * An array can also be passed eg ['id', 'name'] or ['id', ['name','DESC'] to sort by multiple fields
      * To change the order use $->order($sortBy, $ascending) method
-     * @param string $sortBy
+     * @param string|array $sortBy
      * @return $this
      */
-    public function sort(string $sortBy): StrapiCollection
+    public function sort(string|array $sortBy): StrapiCollection
     {
         $this->sortBy = $sortBy;
         return $this;
@@ -547,11 +548,11 @@ class StrapiCollection extends StrapiWrapper
     /**
      * Will tell the CMS to sort by the field indicated and adjust the order.
      * To just change the sort field use $->sort($sortBy) method
-     * @param string $sortBy
+     * @param string|array $sortBy
      * @param bool $ascending
      * @return $this
      */
-    public function order(string $sortBy, bool $ascending = false): StrapiCollection
+    public function order(string|array $sortBy, bool $ascending = false): StrapiCollection
     {
         $this->sortBy = $sortBy;
         $this->sortOrder = $ascending ? 'ASC' : 'DESC';
