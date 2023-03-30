@@ -30,6 +30,7 @@ class StrapiCollection extends StrapiWrapper
     private array|null $populate = [];
     private int $deep;
     private bool $includeDrafts = false;
+    private bool $flatten = true;
 
     public function __construct(string $type)
     {
@@ -199,7 +200,10 @@ class StrapiCollection extends StrapiWrapper
         if ($this->apiVersion === 3) {
             $this->meta = ['response' => time()];
         } else {
-            $data = $this->squashDataFields($data);
+            if ($this->flatten) {
+                $data = $this->squashDataFields($data);
+            }
+
             if (empty($data['meta'])) {
                 $this->meta = ['response' => time()];
             } else {
@@ -416,7 +420,8 @@ class StrapiCollection extends StrapiWrapper
     {
         $configurableOptions = [
             'absoluteUrl', 'squashImage', 'includeDrafts',
-            'sortBy', 'sortOrder', 'limit', 'page', 'deep'
+            'sortBy', 'sortOrder', 'limit', 'page', 'deep',
+            'flatten'
         ];
 
         foreach ($options as $key => $value) {
@@ -569,6 +574,11 @@ class StrapiCollection extends StrapiWrapper
     {
         $this->populate = $populateQuery;
         return $this;
+    }
+
+    public function flatten(bool $flatten = true)
+    {
+        $this->flatten = $flatten;
     }
 
     // Clear any cached item for the collection

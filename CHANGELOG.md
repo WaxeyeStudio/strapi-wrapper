@@ -89,3 +89,7 @@ All notable changes to `strapi-wrapper` will be documented in this file.
 ### 0.3.0 - 2023-02-16
 
 - sort by multiple fields
+
+### 0.3.1 - 2023-03-31
+
+- option to not flatten results
