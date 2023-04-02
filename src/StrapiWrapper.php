@@ -203,7 +203,7 @@ class StrapiWrapper
     protected function generateQueryUrl(string $type, string|array $sortBy, string $sortOrder, int $limit, int $page, string $customQuery = ''): string
     {
         $concat = str_contains($type, '?') ? '&' : '?';
-        $url = [$type, $this->generateSortUrl($sortBy, $sortOrder)];
+        $url = [$this->generateSortUrl($sortBy, $sortOrder)];
         if ($this->apiVersion === 4) {
             $url[] = 'pagination[pageSize]=' . $limit;
             $url[] = 'pagination[page]=' . $page;
