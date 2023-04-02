@@ -148,14 +148,14 @@ class StrapiCollection extends StrapiWrapper
     {
         if (empty($this->populate)) {
             if ($this->deep > 0) {
-                return '&populate=deep,' . $this->deep;
+                return 'populate=deep,' . $this->deep;
             }
 
             if (is_null($this->populate)) {
                 return "";
             }
 
-            return '&populate=*';
+            return 'populate=*';
         }
 
         $string = [];
@@ -166,7 +166,7 @@ class StrapiCollection extends StrapiWrapper
                 $string[] = "populate[$key][populate]=$value";
             }
         }
-        return '&' . implode('&', $string);
+        return implode('&', $string);
     }
 
     /**
