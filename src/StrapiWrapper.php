@@ -3,11 +3,13 @@
 namespace SilentWeb\StrapiWrapper;
 
 use GuzzleHttp\Promise\PromiseInterface;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use SilentWeb\StrapiWrapper\Exceptions\BadRequest;
+use SilentWeb\StrapiWrapper\Exceptions\ConnectionError;
 use SilentWeb\StrapiWrapper\Exceptions\PermissionDenied;
 use SilentWeb\StrapiWrapper\Exceptions\UnknownAuthMethod;
 use SilentWeb\StrapiWrapper\Exceptions\UnknownError;
@@ -15,6 +17,7 @@ use Throwable;
 
 class StrapiWrapper
 {
+    protected const DEFAULT_RECORD_LIMIT = 100;
     protected int $apiVersion;
     protected int $cacheTimeout;
     protected array $squashedData = [];
@@ -79,6 +82,10 @@ class StrapiWrapper
             return $response->json();
         }
 
+        if ($response->status() === 400) {
+            throw new BadRequest($request . ' ' . $response->body(), 400);
+        }
+
         throw new UnknownError($response->body());
     }
 
@@ -114,6 +121,8 @@ class StrapiWrapper
                 "identifier" => $this->username,
                 "password" => $this->password
             ]);
+        } catch (ConnectionException $e) {
+            throw new ConnectionError($e);
         } catch (Throwable $th) {
             throw new UnknownError($th);
         } finally {
@@ -205,11 +214,19 @@ class StrapiWrapper
         $concat = str_contains($type, '?') ? '&' : '?';
         $url = [$this->generateSortUrl($sortBy, $sortOrder)];
         if ($this->apiVersion === 4) {
-            $url[] = 'pagination[pageSize]=' . $limit;
-            $url[] = 'pagination[page]=' . $page;
+            if ($limit !== self::DEFAULT_RECORD_LIMIT) {
+                $url[] = 'pagination[pageSize]=' . $limit;
+            }
+            if ($page !== 1) {
+                $url[] = 'pagination[page]=' . $page;
+            }
+
             $url[] = $customQuery;
         } else {
-            $url[] = '_limit=' . $limit;
+            if ($limit !== self::DEFAULT_RECORD_LIMIT) {
+                $url[] = '_limit=' . $limit;
+            }
+
             $url[] = '_start=' . $page;
         }
         $url = array_filter($url);

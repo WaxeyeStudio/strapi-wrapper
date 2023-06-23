@@ -39,6 +39,8 @@ class StrapiCollection extends StrapiWrapper
         $this->deep = config('strapi-wrapper.populateDeep');
         $this->squashImage = config('strapi-wrapper.squashImage');
         $this->absoluteUrl = config('strapi-wrapper.absoluteUrl');
+        $this->limit = StrapiWrapper::DEFAULT_RECORD_LIMIT;
+        $this->page = 1;
     }
 
     /**

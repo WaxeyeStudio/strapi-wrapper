@@ -93,3 +93,8 @@ All notable changes to `strapi-wrapper` will be documented in this file.
 ### 0.3.1 - 2023-03-31
 
 - option to not flatten results
+
+### 0.3.2 - 2023-06-23
+
+- change to reduce unnecessary fields in query string
+- change to catch different exceptions
