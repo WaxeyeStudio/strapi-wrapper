@@ -98,3 +98,7 @@ All notable changes to `strapi-wrapper` will be documented in this file.
 
 - change to reduce unnecessary fields in query string
 - change to catch different exceptions
+
+### 0.3.3 - 2023-09-06
+
+- update composer
