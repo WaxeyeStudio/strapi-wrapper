@@ -45,6 +45,7 @@ class StrapiCollection extends StrapiWrapper
 
     /**
      * @param int $failCode
+     *
      * @return mixed
      * @deprecated since version 0.2.7, use findOneOrFail() instead
      */
@@ -54,8 +55,9 @@ class StrapiCollection extends StrapiWrapper
     }
 
     /**
-     * @param int $failCode
+     * @param int  $failCode
      * @param bool $cache
+     *
      * @return mixed
      */
     public function findOneOrFail(int $failCode = 404, bool $cache = true): mixed
@@ -173,6 +175,7 @@ class StrapiCollection extends StrapiWrapper
 
     /**
      * @param bool $cache
+     *
      * @return array|mixed
      * @deprecated since version 0.2.7, use query() instead.
      */
@@ -183,6 +186,7 @@ class StrapiCollection extends StrapiWrapper
 
     /**
      * @param bool $cache
+     *
      * @return array|mixed
      */
     public function query(bool $cache = true): mixed
@@ -246,8 +250,9 @@ class StrapiCollection extends StrapiWrapper
     }
 
     /**
-     * @param $id
+     * @param     $id
      * @param int $errorCode
+     *
      * @return array|null
      * @deprecated since version 0.2.7, use findOneByIdOrFail() instead.
      */
@@ -257,9 +262,10 @@ class StrapiCollection extends StrapiWrapper
     }
 
     /**
-     * @param $id
-     * @param int $errorCode
+     * @param      $id
+     * @param int  $errorCode
      * @param bool $cache
+     *
      * @return array|null
      */
     public function findOneByIdOrFail($id, int $errorCode = 404, bool $cache = true): ?array
@@ -272,8 +278,9 @@ class StrapiCollection extends StrapiWrapper
     }
 
     /**
-     * @param int $id
+     * @param int  $id
      * @param bool $cache
+     *
      * @return array|null
      */
     public function findOneById(int $id, bool $cache = true): array|null
@@ -290,7 +297,7 @@ class StrapiCollection extends StrapiWrapper
             // This hasn't worked, so lets try querying the main collection
             Log::debug('Custom query failed first attempt', $e->getTrace());
             try {
-                $this->field('id')->filter('$eq', $id);
+                $this->field('id')->filter($id);
                 $data = $this->findOne($cache);
             } catch (Exception $e) {
                 // Still failed, so we return null;
@@ -306,6 +313,7 @@ class StrapiCollection extends StrapiWrapper
 
     /**
      * @param bool $refresh
+     *
      * @return $this
      */
     public function clearAllFilters(bool $refresh = false): static
@@ -319,8 +327,10 @@ class StrapiCollection extends StrapiWrapper
 
     /**
      * Query using a custom endpoint and fetch results
+     *
      * @param string $customType
-     * @param bool $cache
+     * @param bool   $cache
+     *
      * @return mixed
      */
     public function getCustom(string $customType, bool $cache = true): mixed
@@ -337,6 +347,7 @@ class StrapiCollection extends StrapiWrapper
 
     /**
      * @param string $fieldName
+     *
      * @return mixed|StrapiField
      */
     public function field(string $fieldName): mixed
@@ -349,6 +360,7 @@ class StrapiCollection extends StrapiWrapper
 
     /**
      * @param $id
+     *
      * @return array|null
      * @deprecated since version 0.2.7, use findOneById() instead
      */
@@ -368,6 +380,7 @@ class StrapiCollection extends StrapiWrapper
 
     /**
      * @param int $limit
+     *
      * @return $this
      */
     public function recent(int $limit = 20): static
@@ -416,6 +429,7 @@ class StrapiCollection extends StrapiWrapper
 
     /**
      * @param array $options
+     *
      * @return $this
      */
     public function setOptions(array $options): StrapiCollection
@@ -423,7 +437,7 @@ class StrapiCollection extends StrapiWrapper
         $configurableOptions = [
             'absoluteUrl', 'squashImage', 'includeDrafts',
             'sortBy', 'sortOrder', 'limit', 'page', 'deep',
-            'flatten'
+            'flatten',
         ];
 
         foreach ($options as $key => $value) {
@@ -458,7 +472,9 @@ class StrapiCollection extends StrapiWrapper
      * Will tell the CMS to sort by the field indicated using the last set order.
      * An array can also be passed eg ['id', 'name'] or ['id', ['name','DESC'] to sort by multiple fields
      * To change the order use $->order($sortBy, $ascending) method
+     *
      * @param string|array $sortBy
+     *
      * @return $this
      */
     public function sort(string|array $sortBy): StrapiCollection
@@ -469,6 +485,7 @@ class StrapiCollection extends StrapiWrapper
 
     /**
      * @param string $limit
+     *
      * @return $this
      */
     public function limit(string $limit): StrapiCollection
@@ -479,6 +496,7 @@ class StrapiCollection extends StrapiWrapper
 
     /**
      * @param int $page
+     *
      * @return $this
      */
     public function page(int $page): StrapiCollection
@@ -489,6 +507,7 @@ class StrapiCollection extends StrapiWrapper
 
     /**
      * @param array $fields
+     *
      * @return PromiseInterface|Response
      */
     public function post(array $fields): PromiseInterface|Response
@@ -500,6 +519,7 @@ class StrapiCollection extends StrapiWrapper
     /**
      * @param array $fields
      * @param array $files
+     *
      * @return PromiseInterface|Response
      * @throws JsonException
      */
@@ -528,14 +548,17 @@ class StrapiCollection extends StrapiWrapper
         return [
             'name' => $name,
             'contents' => fopen($file['path'], 'rb'),
-            'filename' => $file['name'] ?? null
+            'filename' => $file['name'] ?? null,
         ];
     }
 
     /**
      * If not specifying which fields to populate, will try to populate $depth levels when performing a get request
-     * note, this requires https://github.com/Barelydead/strapi-plugin-populate-deep to be installed on the strapi server
+     * note, this requires https://github.com/Barelydead/strapi-plugin-populate-deep to be installed on the strapi
+     * server
+     *
      * @param int $depth
+     *
      * @return $this
      */
     public function deep(int $depth = 1): StrapiCollection
@@ -555,8 +578,10 @@ class StrapiCollection extends StrapiWrapper
     /**
      * Will tell the CMS to sort by the field indicated and adjust the order.
      * To just change the sort field use $->sort($sortBy) method
+     *
      * @param string|array $sortBy
-     * @param bool $ascending
+     * @param bool         $ascending
+     *
      * @return $this
      */
     public function order(string|array $sortBy, bool $ascending = false): StrapiCollection
@@ -570,6 +595,7 @@ class StrapiCollection extends StrapiWrapper
 
     /**
      * @param array $populateQuery
+     *
      * @return $this
      */
     public function populate(array $populateQuery = []): StrapiCollection
@@ -587,6 +613,7 @@ class StrapiCollection extends StrapiWrapper
 
     /**
      * @param bool $includingItems
+     *
      * @return void
      */
     public function clearCollectionCache(bool $includingItems = false): void
@@ -611,6 +638,7 @@ class StrapiCollection extends StrapiWrapper
 
     /**
      * @param $itemId
+     *
      * @return void
      */
     public function clearItemCache($itemId): void
