@@ -41,9 +41,9 @@ class StrapiWrapper
         $this->cacheTimeout = config('strapi-wrapper.cache');
         $this->timeout = config('strapi-wrapper.timeout');
 
-        $allowedAuthMethods = ['public', 'password'];
-        if ($this->apiVersion >= 4) {
-            $allowedAuthMethods[] = 'token';
+        $allowedAuthMethods = ['public', 'password', 'token'];
+        if ($this->apiVersion <= 3) {
+            throw new ConnectionError('API version not supported');
         }
 
         if (!in_array($this->authMethod, $allowedAuthMethods, true)) {
@@ -104,7 +104,8 @@ class StrapiWrapper
 
             if ($decodedToken->exp < time()) {
                 Cache::forget('strapi-token');
-                if ($preventLoop) abort(503);
+                if ($preventLoop)
+                    abort(503);
                 return self::getToken(1);
             }
         } catch (Throwable $th) {
@@ -119,7 +120,7 @@ class StrapiWrapper
         try {
             $login = Http::timeout($this->timeout)->post($this->apiUrl . '/auth/local', [
                 "identifier" => $this->username,
-                "password" => $this->password
+                "password" => $this->password,
             ]);
         } catch (ConnectionException $e) {
             throw new ConnectionError($e);
@@ -149,7 +150,7 @@ class StrapiWrapper
         if ($files) {
             return $this->postMultipartRequest($this->apiUrl . $query, [
                 'data' => $content,
-                'files' => $files
+                'files' => $files,
             ]);
         }
 

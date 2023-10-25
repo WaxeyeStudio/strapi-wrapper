@@ -102,3 +102,11 @@ All notable changes to `strapi-wrapper` will be documented in this file.
 ### 0.3.3 - 2023-09-06
 
 - update composer
+
+### 0.4.0 - 2023-10-25
+
+- Remove deprecated functions
+- Discontinue support for API version 3
+- Improve fetching by entry id
+- Fixed filter change
+- Bumped dependency versions

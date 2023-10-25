@@ -2,7 +2,7 @@
 // config for SilentWeb/StrapiWrapper
 $strapiUrl = rtrim(env('STRAPI_URL', 'http://localhost:1337'), '/');
 $uploadUrl = env('STRAPI_IMAGES', '');
-$apiVersion = env('STRAPI_VERSION', '3'); // VERSION 3 or 4
+$apiVersion = env('STRAPI_VERSION', '4'); // VERSION 4
 if ($uploadUrl === '') {
     if ($apiVersion === "4") {
         $uploadUrl = preg_replace('/\/api$/', '', $strapiUrl);
@@ -32,5 +32,5 @@ return [
     'absoluteUrl' => env('STRAPI_ABSOLUTE', false),
 
     // Wait time for curl
-    'timeout' => env('STRAPI_TIMEOUT', 60)
+    'timeout' => env('STRAPI_TIMEOUT', 60),
 ];
