@@ -33,4 +33,6 @@ return [
 
     // Wait time for curl
     'timeout' => env('STRAPI_TIMEOUT', 60),
+    // Skip Http verify for curl
+    'verify_ssl' => env('STRAPI_VERIFY', true),
 ];

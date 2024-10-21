@@ -51,90 +51,6 @@ class StrapiWrapper
         }
     }
 
-    /**
-     * @deprecated deprecated since version 0.2.7
-     */
-    public function strapiGet($query, $cache = false)
-    {
-        return $this->getRequest($this->apiUrl . $query, $cache);
-    }
-
-    protected function getRequest($request, $cache = true)
-    {
-        if ($cache) {
-            return Cache::remember($request, $this->cacheTimeout, function () use ($request) {
-                return $this->getRequestActual($request);
-            });
-        }
-
-        return $this->getRequestActual($request);
-    }
-
-    private function getRequestActual($request)
-    {
-        if ($this->authMethod === 'public') {
-            $response = Http::timeout($this->timeout)->get($request);
-        } else {
-            $response = Http::timeout($this->timeout)->withToken($this->getToken())->get($request);
-        }
-
-        if ($response->ok()) {
-            return $response->json();
-        }
-
-        if ($response->status() === 400) {
-            throw new BadRequest($request . ' ' . $response->body(), 400);
-        }
-
-        throw new UnknownError($response->body());
-    }
-
-    protected function getToken($preventLoop = false): string
-    {
-        if ($this->authMethod === 'token') {
-            return $this->token;
-        }
-
-        $token = Cache::remember('strapi-token', 600, function () {
-            return self::loginStrapi();
-        });
-
-        try {
-            $decodedToken = json_decode(base64_decode(str_replace('_', '/', str_replace('-', '+', explode('.', $token)[1]))), false);
-
-            if ($decodedToken->exp < time()) {
-                Cache::forget('strapi-token');
-                if ($preventLoop)
-                    abort(503);
-                return self::getToken(1);
-            }
-        } catch (Throwable $th) {
-            throw new UnknownError('Issue with fetching token ' . $th);
-        }
-        return $token;
-    }
-
-    private function loginStrapi()
-    {
-        $login = null;
-        try {
-            $login = Http::timeout($this->timeout)->post($this->apiUrl . '/auth/local', [
-                "identifier" => $this->username,
-                "password" => $this->password,
-            ]);
-        } catch (ConnectionException $e) {
-            throw new ConnectionError($e);
-        } catch (Throwable $th) {
-            throw new UnknownError($th);
-        } finally {
-            if ($login && $login->ok()) {
-                return $login->json()['jwt'];
-            }
-
-            throw new PermissionDenied();
-        }
-    }
-
     public function setTimeout(int $timeout): StrapiWrapper
     {
         if ($timeout) {
@@ -160,7 +76,7 @@ class StrapiWrapper
     protected function postMultipartRequest($query, $content): PromiseInterface|Response
     {
         if ($this->authMethod !== 'public') {
-            $client = Http::timeout($this->timeout)->withToken($this->getToken())->asMultipart();
+            $client = $this->httpClient()->withToken($this->getToken())->asMultipart();
             foreach ($content['multipart'] as $file) {
                 $name = 'files';
                 if ($file['name'] !== 'files') {
@@ -187,6 +103,61 @@ class StrapiWrapper
         throw new UnknownError('Not authenticated');
     }
 
+    protected function httpClient()
+    {
+        if (config('strapi-wrapper.verify_ssl') === false) {
+            return Http::withoutVerifying()->timeout($this->timeout);
+        }
+
+        return Http::timeout($this->timeout);
+    }
+
+    protected function getToken($preventLoop = false): string
+    {
+        if ($this->authMethod === 'token') {
+            return $this->token;
+        }
+
+        $token = Cache::remember('strapi-token', 600, function () {
+            return self::loginStrapi();
+        });
+
+        try {
+            $decodedToken = json_decode(base64_decode(str_replace('_', '/', str_replace('-', '+', explode('.', $token)[1]))), false, 512, JSON_THROW_ON_ERROR);
+
+            if ($decodedToken->exp < time()) {
+                Cache::forget('strapi-token');
+                if ($preventLoop)
+                    abort(503);
+                return self::getToken(1);
+            }
+        } catch (Throwable $th) {
+            throw new UnknownError('Issue with fetching token ' . $th);
+        }
+        return $token;
+    }
+
+    private function loginStrapi()
+    {
+        $login = null;
+        try {
+            $login = $this->httpClient()->post($this->apiUrl . '/auth/local', [
+                "identifier" => $this->username,
+                "password" => $this->password,
+            ]);
+        } catch (ConnectionException $e) {
+            throw new ConnectionError($e);
+        } catch (Throwable $th) {
+            throw new UnknownError($th);
+        } finally {
+            if ($login && $login->ok()) {
+                return $login->json()['jwt'];
+            }
+
+            throw new PermissionDenied();
+        }
+    }
+
     protected function postRequest($query, $content): PromiseInterface|Response
     {
         if ($this->authMethod !== 'public') {
@@ -194,10 +165,10 @@ class StrapiWrapper
                 $content = ['data' => $content];
             }
 
-            $response = Http::timeout($this->timeout)->withToken($this->getToken())->post($query, $content);
+            $response = $this->httpClient()->withToken($this->getToken())->post($query, $content);
 
         } else {
-            $response = Http::timeout($this->timeout)->post($query, $content);
+            $response = $this->httpClient()->post($query, $content);
         }
 
         if (!$response->ok()) {
@@ -208,6 +179,36 @@ class StrapiWrapper
             throw new UnknownError('Error posting to strapi on ' . $query, $response->status());
         }
         return $response;
+    }
+
+    protected function getRequest($request, $cache = true)
+    {
+        if ($cache) {
+            return Cache::remember($request, $this->cacheTimeout, function () use ($request) {
+                return $this->getRequestActual($request);
+            });
+        }
+
+        return $this->getRequestActual($request);
+    }
+
+    private function getRequestActual($request)
+    {
+        if ($this->authMethod === 'public') {
+            $response = $this->httpClient()->get($request);
+        } else {
+            $response = $this->httpClient()->withToken($this->getToken())->get($request);
+        }
+
+        if ($response->ok()) {
+            return $response->json();
+        }
+
+        if ($response->status() === 400) {
+            throw new BadRequest($request . ' ' . $response->body(), 400);
+        }
+
+        throw new UnknownError($response->body());
     }
 
     protected function generateQueryUrl(string $type, string|array $sortBy, string $sortOrder, int $limit, int $page, string $customQuery = ''): string

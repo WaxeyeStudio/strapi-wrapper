@@ -110,3 +110,9 @@ All notable changes to `strapi-wrapper` will be documented in this file.
 - Improve fetching by entry id
 - Fixed filter change
 - Bumped dependency versions
+
+### 0.4.1 - 2024-10-22
+
+- Remove deprecated functions
+- add new variable to all insecure ssl
+  STRAPI_VERIFY=false to allow insecure
