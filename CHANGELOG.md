@@ -116,3 +116,7 @@ All notable changes to `strapi-wrapper` will be documented in this file.
 - Remove deprecated functions
 - add new variable to all insecure ssl
   STRAPI_VERIFY=false to allow insecure
+
+### 0.4.2 - 2024-10-23
+
+Re-upload of previous version
