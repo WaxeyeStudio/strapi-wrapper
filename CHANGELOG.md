@@ -120,3 +120,7 @@ All notable changes to `strapi-wrapper` will be documented in this file.
 ### 0.4.2 - 2024-10-23
 
 Re-upload of previous version
+
+### 0.4.3 - 2024-10-29
+
+Fix support for multiple filters

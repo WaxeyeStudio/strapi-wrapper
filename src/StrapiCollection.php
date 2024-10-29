@@ -315,7 +315,7 @@ class StrapiCollection extends StrapiWrapper
      */
     public function field(string $fieldName): mixed
     {
-        if (!isset($this->filters[$fieldName])) {
+        if (!isset($this->fields[$fieldName])) {
             $this->fields[$fieldName] = new StrapiField($fieldName, $this);
         }
         return $this->fields[$fieldName];
