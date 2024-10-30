@@ -41,9 +41,9 @@ class StrapiWrapper
         $this->cacheTimeout = config('strapi-wrapper.cache');
         $this->timeout = config('strapi-wrapper.timeout');
 
-        $allowedAuthMethods = ['public', 'password', 'token'];
-        if ($this->apiVersion <= 3) {
-            throw new ConnectionError('API version not supported');
+        $allowedAuthMethods = ['public', 'password'];
+        if ($this->apiVersion >= 4) {
+            $allowedAuthMethods[] = 'token';
         }
 
         if (!in_array($this->authMethod, $allowedAuthMethods, true)) {
