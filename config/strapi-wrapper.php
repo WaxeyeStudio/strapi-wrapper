@@ -35,4 +35,7 @@ return [
     'timeout' => env('STRAPI_TIMEOUT', 60),
     // Skip Http verify for curl
     'verify_ssl' => env('STRAPI_VERIFY', true),
+
+    // Log exceptions?
+    'log_enabled' => env('STRAPI_LOG', false),
 ];

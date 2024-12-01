@@ -9,7 +9,6 @@ use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 use JsonException;
 use SilentWeb\StrapiWrapper\Exceptions\UnknownError;
 
@@ -56,7 +55,7 @@ class StrapiCollection extends StrapiWrapper
                 return $result;
             }
         } catch (Exception $ex) {
-            Log::error($ex);
+            $this->log($ex);
         }
 
         abort($failCode);
@@ -277,7 +276,7 @@ class StrapiCollection extends StrapiWrapper
             $data = $this->processRequestResponse($data);
         } catch (Exception $e) {
             // This hasn't worked, so lets try querying the main collection
-            Log::debug('Custom query failed first attempt', $e->getTrace());
+            $this->log('Custom query failed first attempt', 'debug', $e->getTrace());
             try {
                 $currentFilters = $this->fields;
                 $this->clearAllFilters();
@@ -285,7 +284,7 @@ class StrapiCollection extends StrapiWrapper
                 $data = $this->findOne($cache);
             } catch (Exception $e) {
                 // Still failed, so we return null;
-                Log::debug('Custom query failed second attempt', $e->getTrace());
+                $this->log('Custom query failed second attempt', 'debug', $e->getTrace());
                 $this->fields = $currentFilters;
                 return null;
             }

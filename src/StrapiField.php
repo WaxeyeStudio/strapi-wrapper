@@ -2,8 +2,6 @@
 
 namespace SilentWeb\StrapiWrapper;
 
-use SilentWeb\StrapiWrapper\Exceptions\UnknownError;
-
 class StrapiField
 {
     private string $name;
@@ -43,8 +41,9 @@ class StrapiField
     }
 
     /**
-     * @param $by
+     * @param        $by
      * @param string $how
+     *
      * @return StrapiCollection
      */
     public function filter($by, string $how = StrapiFilter::Equals): StrapiCollection
@@ -71,9 +70,6 @@ class StrapiField
                 } else {
                     $builder[] = "filters[" . $this->name . "][$how]=" . urlencode($by);
                 }
-            } else {
-                // TODO: Implement v3 filter
-                throw new UnknownError('Unimplemented');
             }
         }
         return implode('&', $builder);

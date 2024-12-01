@@ -3,6 +3,7 @@
 namespace SilentWeb\StrapiWrapper;
 
 use GuzzleHttp\Promise\PromiseInterface;
+use http\Exception\RuntimeException;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Cache;
@@ -29,6 +30,8 @@ class StrapiWrapper
     protected string $token;
     protected string $authMethod;
 
+    protected bool $debugLoggingEnabled = false;
+
     public function __construct()
     {
         $this->apiUrl = config('strapi-wrapper.url');
@@ -40,6 +43,7 @@ class StrapiWrapper
         $this->authMethod = config('strapi-wrapper.auth');
         $this->cacheTimeout = config('strapi-wrapper.cache');
         $this->timeout = config('strapi-wrapper.timeout');
+        $this->debugLoggingEnabled = config('strapi-wrapper.log_enabled');
 
         $allowedAuthMethods = ['public', 'password', 'token'];
         if ($this->apiVersion <= 3) {
@@ -90,7 +94,7 @@ class StrapiWrapper
             if (!$response->ok()) {
                 if ($response->status() === 400) {
                     $json = $response->json();
-                    Log::error("Post error", $json);
+                    $this->log("Post error", 'error', $json);
                     throw new BadRequest($query . ' ' . $json['error']['name'] . ' - ' . $json['error']['message'], 400);
                 }
 
@@ -150,12 +154,32 @@ class StrapiWrapper
         } catch (Throwable $th) {
             throw new UnknownError($th);
         } finally {
-            if ($login && $login->ok()) {
-                return $login->json()['jwt'];
+            if (isset($login)) {
+                if ($login->ok()) {
+                    return $login->json()['jwt'];
+                }
+
+                if ($login->status() === 403 || $login->status() === 401) {
+                    throw new PermissionDenied();
+                }
+
+                if ($login->status() === 400) {
+                    throw new BadRequest("Bad request in strapi login", 400, $login->toException());
+                }
+
+                throw new UnknownError($login->toException());
             }
 
-            throw new PermissionDenied();
+            throw new RuntimeException("Error initialising strapi wrapper");
         }
+    }
+
+    protected function log($message, $level = 'error', $context = [])
+    {
+        if ($this->debugLoggingEnabled) {
+            Log::log($level, $message, $context);
+        }
+
     }
 
     protected function postRequest($query, $content): PromiseInterface|Response
