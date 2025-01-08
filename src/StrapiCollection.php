@@ -136,8 +136,15 @@ class StrapiCollection extends StrapiWrapper
     private function getPopulateQuery(): string
     {
         if (empty($this->populate)) {
-            if ($this->deep > 0) {
+            // Only compatible with v4 and v5
+            // V4 - https://github.com/Barelydead/strapi-plugin-populate-deep
+            if ($this->apiVersion === 4 && $this->deep > 0) {
                 return 'populate=deep,' . $this->deep;
+            }
+
+            // V5 - https://github.com/NEDDL/strapi-v5-plugin-populate-deep
+            if ($this->apiVersion === 5 && $this->deep > 0) {
+                return 'pLevel=' . $this->deep;
             }
 
             if (is_null($this->populate)) {
@@ -527,8 +534,8 @@ class StrapiCollection extends StrapiWrapper
 
     /**
      * If not specifying which fields to populate, will try to populate $depth levels when performing a get request
-     * note, this requires https://github.com/Barelydead/strapi-plugin-populate-deep to be installed on the strapi
-     * server
+     * note, this requires https://github.com/Barelydead/strapi-plugin-populate-deep or
+     * https://github.com/NEDDL/strapi-v5-plugin-populate-deep to be installed on the strapi server
      *
      * @param int $depth
      *

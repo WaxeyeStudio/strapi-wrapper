@@ -4,15 +4,20 @@ $strapiUrl = rtrim(env('STRAPI_URL', 'http://localhost:1337'), '/');
 $uploadUrl = env('STRAPI_IMAGES', '');
 $apiVersion = env('STRAPI_VERSION', '4'); // VERSION 4
 if ($uploadUrl === '') {
-    if ($apiVersion === "4") {
+    // Default to strapi url
+    $uploadUrl = $strapiUrl;
+
+    // Unless version 4 or 5
+    if ($apiVersion === "4" || $apiVersion === "5") {
         $uploadUrl = preg_replace('/\/api$/', '', $strapiUrl);
-    } else $uploadUrl = $strapiUrl;
+    }
 }
 
 return [
     'url' => $strapiUrl,
     'auth' => env('STRAPI_AUTH', 'public'), // VALID OPTIONS ARE 'public', 'password', 'token'
     'version' => $apiVersion,
+    'compatability_mode' => env('STRAPI_V4_COMPATIBILITY', false),
     'cache' => env('STRAPI_CACHE', 3600),
 
     'username' => env('STRAPI_USER', ''),

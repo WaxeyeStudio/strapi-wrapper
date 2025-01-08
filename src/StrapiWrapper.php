@@ -5,6 +5,7 @@ namespace SilentWeb\StrapiWrapper;
 use GuzzleHttp\Promise\PromiseInterface;
 use http\Exception\RuntimeException;
 use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -107,13 +108,22 @@ class StrapiWrapper
         throw new UnknownError('Not authenticated');
     }
 
-    protected function httpClient()
+    protected function httpClient(): PendingRequest
     {
+        // Create client
+        $http = Http::timeout($this->timeout);
+
+        // Check verification
         if (config('strapi-wrapper.verify_ssl') === false) {
-            return Http::withoutVerifying()->timeout($this->timeout);
+            $http = $http->withoutVerifying();
         }
 
-        return Http::timeout($this->timeout);
+        // Add compatibility header for V4->v5
+        if ($this->apiVersion === 5 && config('strapi-wrapper.compatibility_mode') === true) {
+            $http = $http->withHeaders(['Strapi-Response-Format' => 'v4']);
+        }
+
+        return $http;
     }
 
     protected function getToken($preventLoop = false): string
@@ -239,7 +249,16 @@ class StrapiWrapper
     {
         $concat = str_contains($type, '?') ? '&' : '?';
         $url = [$this->generateSortUrl($sortBy, $sortOrder)];
-        if ($this->apiVersion === 4) {
+
+        if ($this->apiVersion === 3) {
+            if ($limit !== self::DEFAULT_RECORD_LIMIT) {
+                $url[] = '_limit=' . $limit;
+            }
+
+            $url[] = '_start=' . $page;
+        }
+
+        if ($this->apiVersion === 4 || $this->apiVersion === 5) {
             if ($limit !== self::DEFAULT_RECORD_LIMIT) {
                 $url[] = 'pagination[pageSize]=' . $limit;
             }
@@ -248,13 +267,8 @@ class StrapiWrapper
             }
 
             $url[] = $customQuery;
-        } else {
-            if ($limit !== self::DEFAULT_RECORD_LIMIT) {
-                $url[] = '_limit=' . $limit;
-            }
-
-            $url[] = '_start=' . $page;
         }
+
         $url = array_filter($url);
 
         return $this->apiUrl . '/' . $type . $concat . implode('&', $url);
