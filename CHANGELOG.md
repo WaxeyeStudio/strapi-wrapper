@@ -124,3 +124,12 @@ Re-upload of previous version
 ### 0.4.3 - 2024-10-29
 
 Fix support for multiple filters
+
+### 5.0.0 - 2025-01-09
+
+- Add compatibility for Strapi v5.
+- Introduce `STRAPI_V4_COMPATIBILITY` configuration to optionally enable v4 response format in v5.
+- Update URL handling logic to support both v4 and v5 API structures seamlessly.
+- Improve pagination and population query building to align with version-specific naming conventions.
+- Enhance HTTP client logic to add compatibility headers and support secure/insecure SSL verification.
+
