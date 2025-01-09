@@ -62,7 +62,7 @@ class StrapiField
     {
         $builder = [];
         foreach ($this->filters as $how => $by) {
-            if ($this->collection->apiVersion() === 4) {
+            if ($this->collection->apiVersion() === 4 || $this->collection->apiVersion() === 5) {
                 // Check for deep filtering
                 $deep = explode('.', $this->name);
                 if (count($deep) > 1) {

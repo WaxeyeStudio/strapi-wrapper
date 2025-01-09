@@ -1,5 +1,6 @@
 {
     "name": "silentweb/strapi-wrapper",
+    "version": "5.0.1",
     "description": "A Laravel Wrapper for Strapi",
     "keywords": [
         "SilentWeb",

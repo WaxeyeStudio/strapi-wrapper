@@ -133,3 +133,6 @@ Fix support for multiple filters
 - Improve pagination and population query building to align with version-specific naming conventions.
 - Enhance HTTP client logic to add compatibility headers and support secure/insecure SSL verification.
 
+### 5.0.0 - 2025-01-09
+
+- Add filter compatibility for strapi v5
