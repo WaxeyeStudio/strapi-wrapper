@@ -195,7 +195,7 @@ class StrapiWrapper
     protected function postRequest($query, $content): PromiseInterface|Response
     {
         if ($this->authMethod !== 'public') {
-            if ($this->apiVersion === 4) {
+            if ($this->apiVersion >= 4) {
                 $content = ['data' => $content];
             }
 

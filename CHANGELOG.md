@@ -136,3 +136,7 @@ Fix support for multiple filters
 ### 5.0.0 - 2025-01-09
 
 - Add filter compatibility for strapi v5
+
+### 5.0.3 - 2025-01-13
+
+- Add Strapi v5 post compatibility
