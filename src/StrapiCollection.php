@@ -115,19 +115,26 @@ class StrapiCollection extends StrapiWrapper
             $this->page,
             $this->getPopulateQuery());
 
+        $filters = [];
         if (count($this->fields) > 0) {
-            $filters = [];
             foreach ($this->fields as $field) {
                 $fieldUrl = $field->url();
                 if ($fieldUrl) {
                     $filters[] = $fieldUrl;
                 }
             }
-            $url .= '&' . implode('&', ($filters));
         }
 
         if ($this->includeDrafts) {
-            $url .= '&publicationState=preview';
+            if ($this->apiVersion >= 5) {
+                $filters[] = 'status=draft';
+            } else {
+                $filters[] = 'publicationState=preview';
+            }
+        }
+
+        if (!empty($filters)) {
+            $url .= '&' . implode('&', ($filters));
         }
 
         return $url;

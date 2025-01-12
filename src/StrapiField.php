@@ -17,17 +17,43 @@ class StrapiField
         $this->collection = $collection;
     }
 
-    /**
-     * @deprecated deprecated since version 0.2.5
+    /*
+     * Used to query a particular field for multiple values
+     * eg ->valueOr(['slugValue', 'slugValue-2'], '$eq')
+     * This field can match either slugValue or slugValue-2
      */
-    public function back(): StrapiCollection
+    public function valueOr(array $values, string $comparisonMethod = StrapiFilter::Equals): StrapiCollection
     {
+        foreach ($values as $index => $value) {
+            $calculatedFieldName = '$or.' . $index . '.' . $this->name;
+            $this->collection->field($calculatedFieldName)->filter($value, $comparisonMethod);
+            $this->linkedFilters[] = $calculatedFieldName;
+        }
+
         return $this->collection;
     }
 
-    public function or($by, string $how = StrapiFilter::Equals, array $fields = []): StrapiCollection
+    /*
+     * Used to find a particular value that may appear in multiple fields
+     * eg ->valueOr('slugValue', ['title', 'slug'], '$eq')
+     * This 'slugValue' can match either title or slug
+     */
+
+    /**
+     * @param        $value
+     * @param string $how
+     *
+     * @return StrapiCollection
+     */
+    public function filter($value, string $how = StrapiFilter::Equals): StrapiCollection
     {
-        $this->multiFilter('$or.', $by, $how, [$this->name, ...$fields]);
+        $this->filters[$how] = $value;
+        return $this->collection;
+    }
+
+    public function valueIn($value, array $otherFields, string $comparisonMethod = StrapiFilter::Equals): StrapiCollection
+    {
+        $this->multiFilter('$or.', $value, $comparisonMethod, [$this->name, ...$otherFields]);
         return $this->collection;
     }
 
@@ -41,34 +67,45 @@ class StrapiField
     }
 
     /**
-     * @param        $by
+     * @param        $value
      * @param string $how
+     * @param array  $fields
      *
      * @return StrapiCollection
+     * @deprecated Will be reworked in future versions
      */
-    public function filter($by, string $how = StrapiFilter::Equals): StrapiCollection
+    public function or($value, string $how = StrapiFilter::Equals, array $fields = []): StrapiCollection
     {
-        $this->filters[$how] = $by;
+        $this->multiFilter('$or.', $value, $how, [$this->name, ...$fields]);
         return $this->collection;
     }
 
-    public function and($by, string $how = StrapiFilter::Equals, array $fields = []): StrapiCollection
+
+    /**
+     * @param        $value
+     * @param string $how
+     * @param array  $fields
+     *
+     * @return StrapiCollection
+     * @deprecated Will be reworked in future versions
+     */
+    public function and($value, string $how = StrapiFilter::Equals, array $fields = []): StrapiCollection
     {
-        $this->multiFilter('$and.', $by, $how, [$this->name, ...$fields]);
+        $this->multiFilter('$and.', $value, $how, [$this->name, ...$fields]);
         return $this->collection;
     }
 
     public function url(): string
     {
         $builder = [];
-        foreach ($this->filters as $how => $by) {
+        foreach ($this->filters as $how => $value) {
             if ($this->collection->apiVersion() === 4 || $this->collection->apiVersion() === 5) {
                 // Check for deep filtering
                 $deep = explode('.', $this->name);
                 if (count($deep) > 1) {
-                    $builder[] = "filters[" . implode('][', $deep) . "][$how]=" . urlencode($by);
+                    $builder[] = "filters[" . implode('][', $deep) . "][$how]=" . urlencode($value);
                 } else {
-                    $builder[] = "filters[" . $this->name . "][$how]=" . urlencode($by);
+                    $builder[] = "filters[" . $this->name . "][$how]=" . urlencode($value);
                 }
             }
         }
