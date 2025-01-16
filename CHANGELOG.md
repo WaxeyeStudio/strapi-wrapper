@@ -140,3 +140,7 @@ Fix support for multiple filters
 ### 5.0.3 - 2025-01-13
 
 - Add Strapi v5 post compatibility
+
+### 5.0.4 - 2025-01-16
+
+- Listen to correct response

@@ -2,6 +2,7 @@
 
 namespace SilentWeb\StrapiWrapper;
 
+use Exception;
 use GuzzleHttp\Promise\PromiseInterface;
 use http\Exception\RuntimeException;
 use Illuminate\Http\Client\ConnectionException;
@@ -194,18 +195,23 @@ class StrapiWrapper
 
     protected function postRequest($query, $content): PromiseInterface|Response
     {
-        if ($this->authMethod !== 'public') {
-            if ($this->apiVersion >= 4) {
-                $content = ['data' => $content];
-            }
-
-            $response = $this->httpClient()->withToken($this->getToken())->post($query, $content);
-
-        } else {
-            $response = $this->httpClient()->post($query, $content);
+        if ($this->apiVersion >= 4) {
+            $content = ['data' => $content];
         }
 
-        if (!$response->ok()) {
+        $postClient = $this->httpClient();
+        if ($this->authMethod !== 'public') {
+            $postClient = $postClient->withToken($this->getToken());
+        }
+
+        $response = null;
+        try {
+            $response = $postClient->post($query, $content);
+        } catch (Exception $exception) {
+            throw new UnknownError($exception);
+        }
+
+        if ($response && !$response->ok() && !$response->created()) {
             if ($response->status() === 400) {
                 throw new BadRequest($query . ' ' . $response->body(), 400);
             }
