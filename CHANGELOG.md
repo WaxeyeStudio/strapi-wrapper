@@ -144,3 +144,8 @@ Fix support for multiple filters
 ### 5.0.4 - 2025-01-16
 
 - Listen to correct response
+
+### 5.0.5 - 2025-05-15
+
+- Better error reporting for get requests
+- Support for Laravel 11

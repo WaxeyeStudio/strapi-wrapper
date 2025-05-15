@@ -1,6 +1,6 @@
 {
     "name": "silentweb/strapi-wrapper",
-    "version": "5.0.4",
+    "version": "5.0.5",
     "description": "A Laravel Wrapper for Strapi",
     "keywords": [
         "SilentWeb",
@@ -18,18 +18,17 @@
         }
     ],
     "require": {
-        "php": "^8.0|8.1|8.2|8.3",
-        "guzzlehttp/guzzle": "^7.0",
-        "spatie/laravel-package-tools": "^1.9.2"
+        "php": "^8.1|8.2|8.3",
+        "guzzlehttp/guzzle": "^7.9.3",
+        "spatie/laravel-package-tools": "^1.92.4"
     },
     "require-dev": {
         "roave/security-advisories": "dev-latest",
-        "nunomaduro/collision": "^5.10",
-        "orchestra/testbench": "^6.22",
-        "pestphp/pest": "^1.21",
-        "pestphp/pest-plugin-laravel": "^1.1",
-        "phpunit/phpunit": "^9.5",
-        "spatie/laravel-ray": "^1.26"
+        "nunomaduro/collision": "^8.7.0",
+        "orchestra/testbench": "^9.14.0",
+        "pestphp/pest": "^3.8.2",
+        "pestphp/pest-plugin-laravel": "^3.2.0",
+        "spatie/laravel-ray": "^1.40.2"
     },
     "autoload": {
         "psr-4": {
