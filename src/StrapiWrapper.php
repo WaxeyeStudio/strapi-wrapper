@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use SilentWeb\StrapiWrapper\Exceptions\BadRequest;
 use SilentWeb\StrapiWrapper\Exceptions\ConnectionError;
+use SilentWeb\StrapiWrapper\Exceptions\NotFoundError;
 use SilentWeb\StrapiWrapper\Exceptions\PermissionDenied;
 use SilentWeb\StrapiWrapper\Exceptions\UnknownAuthMethod;
 use SilentWeb\StrapiWrapper\Exceptions\UnknownError;
@@ -248,7 +249,15 @@ class StrapiWrapper
             throw new BadRequest($request . ' ' . $response->body(), 400);
         }
 
-        throw new UnknownError($response->body());
+        if ($response->status() === 404) {
+            throw new NotFoundError($request . ' ' . $response->body(), 404);
+        }
+
+        if ($response->status() === 401 || $response->status() === 403) {
+            throw new PermissionDenied($request);
+        }
+
+        throw new UnknownError("[" . $response->status() . "] " . $request . "\n" . $response->body());
     }
 
     protected function generateQueryUrl(string $type, string|array $sortBy, string $sortOrder, int $limit, int $page, string $customQuery = ''): string
