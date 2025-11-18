@@ -340,7 +340,7 @@ class StrapiWrapper
         return $this->apiUrl.'/'.$type;
     }
 
-    protected function convertToAbsoluteUrls($array): array
+    protected function convertToAbsoluteUrls(array $array): array
     {
         foreach ($array as $key => $item) {
             // If value is array, call func on self to check values
