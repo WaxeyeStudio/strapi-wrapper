@@ -142,7 +142,7 @@ class StrapiWrapper
             return $this->token;
         }
 
-        $token = Cache::remember('strapi-token', 600, function () {
+        $token = Cache::remember('strapi-token', config('strapi-wrapper.token_cache_ttl', 600), function () {
             return self::loginStrapi();
         });
 

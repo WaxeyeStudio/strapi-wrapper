@@ -20,6 +20,7 @@ return [
     'version' => $apiVersion,
     'compatibility_mode' => env('STRAPI_V4_COMPATIBILITY', false),
     'cache' => env('STRAPI_CACHE', 3600),
+    'token_cache_ttl' => env('STRAPI_TOKEN_CACHE_TTL', 600),
 
     'username' => env('STRAPI_USER', ''),
     'password' => env('STRAPI_PASS', ''),
