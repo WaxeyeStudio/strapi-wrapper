@@ -166,7 +166,7 @@ class StrapiWrapper
         return $token;
     }
 
-    private function loginStrapi(): string
+    protected function loginStrapi(): string
     {
         $login = null;
         try {
