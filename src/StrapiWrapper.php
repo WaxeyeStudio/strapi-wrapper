@@ -142,8 +142,9 @@ class StrapiWrapper
 
             if ($decodedToken->exp < time()) {
                 Cache::forget('strapi-token');
-                if ($preventLoop)
-                    abort(503);
+                if ($preventLoop) {
+                    throw new UnknownError('Token refresh loop detected', 503);
+                }
                 return self::getToken(1);
             }
         } catch (Throwable $th) {
