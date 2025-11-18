@@ -213,10 +213,10 @@ class StrapiCollection extends StrapiWrapper
         $putUrl = $this->apiUrl . '/' . $this->type . '/' . $recordId;
 
         if ($this->authMethod === "public") {
-            return Http::timeout($this->timeout)->put($putUrl, $contents);
+            return $this->httpClient()->put($putUrl, $contents);
         }
 
-        return Http::timeout($this->timeout)->withToken($this->getToken())->put($putUrl, $contents);
+        return $this->httpClient()->withToken($this->getToken())->put($putUrl, $contents);
     }
 
     /**
@@ -642,9 +642,9 @@ class StrapiCollection extends StrapiWrapper
         $deleteUrl = $this->apiUrl . '/' . $this->type . '/' . $recordId;
 
         if ($this->authMethod === "public") {
-            return Http::timeout($this->timeout)->delete($deleteUrl);
+            return $this->httpClient()->delete($deleteUrl);
         }
 
-        return Http::timeout($this->timeout)->withToken($this->getToken())->delete($deleteUrl);
+        return $this->httpClient()->withToken($this->getToken())->delete($deleteUrl);
     }
 }
