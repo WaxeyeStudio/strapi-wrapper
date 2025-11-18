@@ -4,7 +4,6 @@ namespace SilentWeb\StrapiWrapper;
 
 use GuzzleHttp\Promise\PromiseInterface;
 use Illuminate\Http\Client\Response;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
 class StrapiUploads extends StrapiWrapper
@@ -19,12 +18,12 @@ class StrapiUploads extends StrapiWrapper
 
     public function delete(int $imageId): PromiseInterface|Response
     {
-        if ($this->authMethod === 'public') {
-            $response = Http::timeout($this->timeout)->delete($this->apiUrl.'/files/'.$imageId);
-        } else {
-            $response = Http::timeout($this->timeout)->withToken($this->getToken())->delete($this->apiUrl.'/files/'.$imageId);
+        $client = $this->httpClient();
+
+        if ($this->authMethod !== 'public') {
+            $client = $client->withToken($this->getToken());
         }
 
-        return $response;
+        return $client->delete($this->apiUrl.'/files/'.$imageId);
     }
 }
