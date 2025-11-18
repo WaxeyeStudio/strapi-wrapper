@@ -127,7 +127,7 @@ class StrapiWrapper
         return $http;
     }
 
-    protected function getToken($preventLoop = false): string
+    protected function getToken(bool $preventLoop = false): string
     {
         if ($this->authMethod === 'token') {
             return $this->token;
@@ -145,7 +145,7 @@ class StrapiWrapper
                 if ($preventLoop) {
                     throw new UnknownError('Token refresh loop detected', 503);
                 }
-                return self::getToken(1);
+                return self::getToken(true);
             }
         } catch (Throwable $th) {
             throw new UnknownError('Issue with fetching token ' . $th);
