@@ -212,7 +212,7 @@ class StrapiWrapper
             throw new UnknownError($exception);
         }
 
-        if ($response && !$response->ok() && !$response->created()) {
+        if ($response && !$response->successful()) {
             if ($response->status() === 400) {
                 throw new BadRequest($query . ' ' . $response->body(), 400);
             }
