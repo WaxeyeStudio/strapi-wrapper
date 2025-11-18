@@ -471,11 +471,11 @@ class StrapiCollection extends StrapiWrapper
     }
 
     /**
-     * @param string $limit
+     * @param int $limit
      *
      * @return $this
      */
-    public function limit(string $limit): StrapiCollection
+    public function limit(int $limit): StrapiCollection
     {
         $this->limit = $limit;
         return $this;
