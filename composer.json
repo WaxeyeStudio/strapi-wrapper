@@ -1,66 +1,60 @@
 {
-    "name": "silentweb/strapi-wrapper",
-    "version": "5.0.5",
-    "description": "A Laravel Wrapper for Strapi",
-    "keywords": [
-        "SilentWeb",
-        "laravel",
-        "strapi",
-        "strapi-wrapper"
-    ],
-    "homepage": "https://lab.silentweb.nz/silentweb/strapi-wrapper",
-    "license": "MIT",
-    "authors": [
-        {
-            "name": "Rebecca",
-            "email": "rebecca@silentweb.nz",
-            "role": "Developer"
-        }
-    ],
-    "require": {
-        "php": "^8.1|8.2|8.3",
-        "guzzlehttp/guzzle": "^7.9.3",
-        "spatie/laravel-package-tools": "^1.92.4"
-    },
-    "require-dev": {
-        "roave/security-advisories": "dev-latest",
-        "nunomaduro/collision": "^8.7.0",
-        "orchestra/testbench": "^9.14.0",
-        "pestphp/pest": "^3.8.2",
-        "pestphp/pest-plugin-laravel": "^3.2.0",
-        "spatie/laravel-ray": "^1.40.2"
-    },
-    "autoload": {
-        "psr-4": {
-            "SilentWeb\\StrapiWrapper\\": "src"
-        }
-    },
-    "autoload-dev": {
-        "psr-4": {
-            "SilentWeb\\StrapiWrapper\\Tests\\": "tests"
-        }
-    },
-    "scripts": {
-        "analyse": "vendor/bin/phpstan analyse",
-        "test": "vendor/bin/pest",
-        "test-coverage": "vendor/bin/pest --coverage"
-    },
-    "config": {
-        "sort-packages": true,
-        "allow-plugins": {
-            "pestphp/pest-plugin": true
-        }
-    },
-    "extra": {
-        "laravel": {
-            "providers": [
-                "SilentWeb\\StrapiWrapper\\StrapiWrapperServiceProvider"
-            ],
-            "aliases": {
-                "StrapiWrapper": "SilentWeb\\StrapiWrapper\\Facades\\StrapiWrapper"
-            }
-        }
-    },
-    "minimum-stability": "dev",
-    "prefer-stable": true
+  "name": "silentweb/strapi-wrapper",
+  "version": "5.0.5",
+  "description": "A Laravel Wrapper for Strapi",
+  "keywords": ["SilentWeb", "laravel", "strapi", "strapi-wrapper"],
+  "homepage": "https://lab.silentweb.nz/silentweb/strapi-wrapper",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Rebecca",
+      "email": "rebecca@silentweb.nz",
+      "role": "Developer"
+    }
+  ],
+  "require": {
+    "php": "^8.2|8.3|8.4",
+    "guzzlehttp/guzzle": "^7.9.3",
+    "spatie/laravel-package-tools": "^1.92.4"
+  },
+  "require-dev": {
+    "laravel/pint": "^1.25",
+    "nunomaduro/collision": "^8.7.0",
+    "orchestra/testbench": "^9.14.0",
+    "pestphp/pest": "^3.8.2",
+    "pestphp/pest-plugin-laravel": "^3.2.0",
+    "roave/security-advisories": "dev-latest",
+    "spatie/laravel-ray": "^1.40.2"
+  },
+  "autoload": {
+    "psr-4": {
+      "SilentWeb\\StrapiWrapper\\": "src"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "SilentWeb\\StrapiWrapper\\Tests\\": "tests"
+    }
+  },
+  "scripts": {
+    "analyse": "vendor/bin/phpstan analyse",
+    "test": "vendor/bin/pest",
+    "test-coverage": "vendor/bin/pest --coverage"
+  },
+  "config": {
+    "sort-packages": true,
+    "allow-plugins": {
+      "pestphp/pest-plugin": true
+    }
+  },
+  "extra": {
+    "laravel": {
+      "providers": ["SilentWeb\\StrapiWrapper\\StrapiWrapperServiceProvider"],
+      "aliases": {
+        "StrapiWrapper": "SilentWeb\\StrapiWrapper\\Facades\\StrapiWrapper"
+      }
+    }
+  },
+  "minimum-stability": "dev",
+  "prefer-stable": true
 }
