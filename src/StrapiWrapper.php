@@ -4,7 +4,6 @@ namespace SilentWeb\StrapiWrapper;
 
 use Exception;
 use GuzzleHttp\Promise\PromiseInterface;
-use http\Exception\RuntimeException;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\Response;
@@ -182,7 +181,7 @@ class StrapiWrapper
                 throw new UnknownError($login->toException());
             }
 
-            throw new RuntimeException("Error initialising strapi wrapper");
+            throw new \RuntimeException("Error initialising strapi wrapper");
         }
     }
 
