@@ -2,6 +2,7 @@
 
 use SilentWeb\StrapiWrapper\StrapiCollection;
 use SilentWeb\StrapiWrapper\Tests\TestCase;
+
 use function PHPUnit\Framework\assertTrue;
 
 uses(TestCase::class)->in(__DIR__);

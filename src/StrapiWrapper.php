@@ -21,15 +21,25 @@ use Throwable;
 class StrapiWrapper
 {
     protected const DEFAULT_RECORD_LIMIT = 100;
+
     protected int $apiVersion;
+
     protected int $cacheTimeout;
+
     protected array $squashedData = [];
+
     protected int $timeout;
+
     protected string $apiUrl;
+
     protected string $imageUrl;
+
     protected string $username;
+
     protected string $password;
+
     protected string $token;
+
     protected string $authMethod;
 
     protected bool $debugLoggingEnabled = false;
@@ -52,8 +62,8 @@ class StrapiWrapper
             throw new ConnectionError('API version not supported');
         }
 
-        if (!in_array($this->authMethod, $allowedAuthMethods, true)) {
-            throw new UnknownAuthMethod();
+        if (! in_array($this->authMethod, $allowedAuthMethods, true)) {
+            throw new UnknownAuthMethod;
         }
     }
 
@@ -68,13 +78,13 @@ class StrapiWrapper
     {
 
         if ($files) {
-            return $this->postMultipartRequest($this->apiUrl . $query, [
+            return $this->postMultipartRequest($this->apiUrl.$query, [
                 'data' => $content,
                 'files' => $files,
             ]);
         }
 
-        return $this->postRequest($this->apiUrl . $query, $content);
+        return $this->postRequest($this->apiUrl.$query, $content);
     }
 
     protected function postMultipartRequest($query, $content): PromiseInterface|Response
@@ -84,22 +94,23 @@ class StrapiWrapper
             foreach ($content['multipart'] as $file) {
                 $name = 'files';
                 if ($file['name'] !== 'files') {
-                    $name .= '.' . $file['name'];
+                    $name .= '.'.$file['name'];
                 }
 
                 $client->attach($name, $file['contents'], $file['filename'] ?? null);
             }
 
             $response = $client->post($query, ['data' => $content['data']]);
-            if (!$response->ok()) {
+            if (! $response->ok()) {
                 if ($response->status() === 400) {
                     $json = $response->json();
-                    $this->log("Post error", 'error', $json);
-                    throw new BadRequest($query . ' ' . $json['error']['name'] . ' - ' . $json['error']['message'], 400);
+                    $this->log('Post error', 'error', $json);
+                    throw new BadRequest($query.' '.$json['error']['name'].' - '.$json['error']['message'], 400);
                 }
 
-                throw new UnknownError('Error posting to strapi on ' . $query, $response->status());
+                throw new UnknownError('Error posting to strapi on '.$query, $response->status());
             }
+
             return $response;
         }
 
@@ -143,11 +154,13 @@ class StrapiWrapper
                 if ($preventLoop) {
                     throw new UnknownError('Token refresh loop detected', 503);
                 }
+
                 return self::getToken(true);
             }
         } catch (Throwable $th) {
-            throw new UnknownError('Issue with fetching token ' . $th);
+            throw new UnknownError('Issue with fetching token '.$th);
         }
+
         return $token;
     }
 
@@ -155,9 +168,9 @@ class StrapiWrapper
     {
         $login = null;
         try {
-            $login = $this->httpClient()->post($this->apiUrl . '/auth/local', [
-                "identifier" => $this->username,
-                "password" => $this->password,
+            $login = $this->httpClient()->post($this->apiUrl.'/auth/local', [
+                'identifier' => $this->username,
+                'password' => $this->password,
             ]);
         } catch (ConnectionException $e) {
             throw new ConnectionError($e);
@@ -170,17 +183,17 @@ class StrapiWrapper
                 }
 
                 if ($login->status() === 403 || $login->status() === 401) {
-                    throw new PermissionDenied();
+                    throw new PermissionDenied;
                 }
 
                 if ($login->status() === 400) {
-                    throw new BadRequest("Bad request in strapi login", 400, $login->toException());
+                    throw new BadRequest('Bad request in strapi login', 400, $login->toException());
                 }
 
                 throw new UnknownError($login->toException());
             }
 
-            throw new \RuntimeException("Error initialising strapi wrapper");
+            throw new \RuntimeException('Error initialising strapi wrapper');
         }
     }
 
@@ -210,13 +223,14 @@ class StrapiWrapper
             throw new UnknownError($exception);
         }
 
-        if ($response && !$response->successful()) {
+        if ($response && ! $response->successful()) {
             if ($response->status() === 400) {
-                throw new BadRequest($query . ' ' . $response->body(), 400);
+                throw new BadRequest($query.' '.$response->body(), 400);
             }
 
-            throw new UnknownError('Error posting to strapi on ' . $query, $response->status());
+            throw new UnknownError('Error posting to strapi on '.$query, $response->status());
         }
+
         return $response;
     }
 
@@ -244,18 +258,18 @@ class StrapiWrapper
         }
 
         if ($response->status() === 400) {
-            throw new BadRequest($request . ' ' . $response->body(), 400);
+            throw new BadRequest($request.' '.$response->body(), 400);
         }
 
         if ($response->status() === 404) {
-            throw new NotFoundError($request . ' ' . $response->body(), 404);
+            throw new NotFoundError($request.' '.$response->body(), 404);
         }
 
         if ($response->status() === 401 || $response->status() === 403) {
             throw new PermissionDenied($request);
         }
 
-        throw new UnknownError("[" . $response->status() . "] " . $request . "\n" . $response->body());
+        throw new UnknownError('['.$response->status().'] '.$request."\n".$response->body());
     }
 
     protected function generateQueryUrl(string $type, string|array $sortBy, string $sortOrder, int $limit, int $page, string $customQuery = ''): string
@@ -265,18 +279,18 @@ class StrapiWrapper
 
         if ($this->apiVersion === 3) {
             if ($limit !== self::DEFAULT_RECORD_LIMIT) {
-                $url[] = '_limit=' . $limit;
+                $url[] = '_limit='.$limit;
             }
 
-            $url[] = '_start=' . $page;
+            $url[] = '_start='.$page;
         }
 
         if ($this->apiVersion === 4 || $this->apiVersion === 5) {
             if ($limit !== self::DEFAULT_RECORD_LIMIT) {
-                $url[] = 'pagination[pageSize]=' . $limit;
+                $url[] = 'pagination[pageSize]='.$limit;
             }
             if ($page !== 1) {
-                $url[] = 'pagination[page]=' . $page;
+                $url[] = 'pagination[page]='.$page;
             }
 
             $url[] = $customQuery;
@@ -284,7 +298,7 @@ class StrapiWrapper
 
         $url = array_filter($url);
 
-        return $this->apiUrl . '/' . $type . $concat . implode('&', $url);
+        return $this->apiUrl.'/'.$type.$concat.implode('&', $url);
     }
 
     protected function generateSortUrl(string|array $sortBy = [], $defaultSortOrder = 'DESC'): ?string
@@ -295,9 +309,8 @@ class StrapiWrapper
 
         $key = $this->apiVersion === 3 ? '_sort' : 'sort';
 
-
-        if (!is_array($sortBy)) {
-            return $key . '=' . $sortBy . ':' . $defaultSortOrder;
+        if (! is_array($sortBy)) {
+            return $key.'='.$sortBy.':'.$defaultSortOrder;
         }
 
         $string = [];
@@ -312,14 +325,15 @@ class StrapiWrapper
                 $order = $defaultSortOrder;
             }
 
-            $string[] = $key . '[' . $index . ']=' . $sort . ':' . $order;
+            $string[] = $key.'['.$index.']='.$sort.':'.$order;
         }
+
         return implode('&', $string);
     }
 
     protected function generatePostUrl(string $type): string
     {
-        return $this->apiUrl . '/' . $type;
+        return $this->apiUrl.'/'.$type;
     }
 
     protected function convertToAbsoluteUrls($array): array
@@ -331,25 +345,24 @@ class StrapiWrapper
             }
 
             // If value is null or empty, stop
-            if (!is_string($item) || empty($item)) {
+            if (! is_string($item) || empty($item)) {
                 continue;
             }
 
-
             // If this is an image/file key - replace with URL in front
             if ($key === 'url' && isset($array['ext']) && str_starts_with($item, '/')) {
-                $array[$key] = $this->imageUrl . $array[$key];
+                $array[$key] = $this->imageUrl.$array[$key];
             } else {
                 // NB: By default strapi returns markdown, but popular editor plugins make the return HTML
 
                 // If HTML Text
                 /** @noinspection RegExpDuplicateCharacterInClass */
                 $html_pattern = '/<img([^>]*) src=[\'|"][^http|ftp|https]([^"|^\']*)\"/';
-                $html_rewrite = "<img\${1} src=\"" . $this->imageUrl . "/\${2}\"";
+                $html_rewrite = '<img${1} src="'.$this->imageUrl.'/${2}"';
 
                 // If Markdown text
                 $markdown_pattern = '/!\[(.*)]\((.*)\)/';
-                $markdown_rewrite = '![$1](' . $this->imageUrl . '$2)';
+                $markdown_rewrite = '![$1]('.$this->imageUrl.'$2)';
                 $array[$key] = preg_replace([$html_pattern, $markdown_pattern], [$html_rewrite, $markdown_rewrite], $item);
             }
         }
@@ -359,7 +372,7 @@ class StrapiWrapper
 
     protected function convertImageFields($array, $parent = null): array
     {
-        if (!$parent) {
+        if (! $parent) {
             // Reset squash data
             $this->squashedData = [];
             $parent = '';
@@ -369,15 +382,15 @@ class StrapiWrapper
             if (is_array($item)) {
                 if (array_key_exists('url', $item) && array_key_exists('mime', $item)) {
                     $array[$key] = $item['url'];
-                    if (!is_numeric($key)) {
+                    if (! is_numeric($key)) {
                         // To make things easier, for non array images we can store attributes alongside
-                        $array[$key . '_squash'] = $item;
+                        $array[$key.'_squash'] = $item;
                     }
 
                     // We also should store the squashed data separately
-                    $this->squashedData[$parent . $key] = $item;
+                    $this->squashedData[$parent.$key] = $item;
                 } else {
-                    $array[$key] = $this->convertImageFields($item, $parent . $key . '.');
+                    $array[$key] = $this->convertImageFields($item, $parent.$key.'.');
                 }
             }
         }
@@ -388,15 +401,15 @@ class StrapiWrapper
     protected function squashDataFields($array): array
     {
         // Check if this response is an array, if not return wrapped in array
-        if (!is_array($array)) {
+        if (! is_array($array)) {
             return $array === null ? [] : [$array];
         }
 
         $modifiedArray = [];
         foreach ($array as $key => $item) {
             if (is_array($item)) {
-                if ($key === "attributes" || $key === "data") {
-                    if ($key === "data" && isset($modifiedArray['id'], $item['id'])) {
+                if ($key === 'attributes' || $key === 'data') {
+                    if ($key === 'data' && isset($modifiedArray['id'], $item['id'])) {
                         $item['data_id'] = $item['id'];
                         unset($item['id']);
                     }
@@ -415,6 +428,7 @@ class StrapiWrapper
                 $modifiedArray[$key] = $item;
             }
         }
+
         return $modifiedArray;
     }
 }

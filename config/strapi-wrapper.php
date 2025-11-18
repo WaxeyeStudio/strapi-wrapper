@@ -1,4 +1,5 @@
 <?php
+
 // config for SilentWeb/StrapiWrapper
 $strapiUrl = rtrim(env('STRAPI_URL', 'http://localhost:1337'), '/');
 $uploadUrl = env('STRAPI_IMAGES', '');
@@ -8,7 +9,7 @@ if ($uploadUrl === '') {
     $uploadUrl = $strapiUrl;
 
     // Unless version 4 or 5
-    if ($apiVersion === "4" || $apiVersion === "5") {
+    if ($apiVersion === '4' || $apiVersion === '5') {
         $uploadUrl = preg_replace('/\/api$/', '', $strapiUrl);
     }
 }

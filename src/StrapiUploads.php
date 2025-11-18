@@ -20,9 +20,9 @@ class StrapiUploads extends StrapiWrapper
     public function delete(int $imageId): PromiseInterface|Response
     {
         if ($this->authMethod === 'public') {
-            $response = Http::timeout($this->timeout)->delete($this->apiUrl . '/files/' . $imageId);
+            $response = Http::timeout($this->timeout)->delete($this->apiUrl.'/files/'.$imageId);
         } else {
-            $response = Http::timeout($this->timeout)->withToken($this->getToken())->delete($this->apiUrl . '/files/' . $imageId);
+            $response = Http::timeout($this->timeout)->withToken($this->getToken())->delete($this->apiUrl.'/files/'.$imageId);
         }
 
         return $response;
