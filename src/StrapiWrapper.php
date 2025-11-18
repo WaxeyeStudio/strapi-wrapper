@@ -57,11 +57,15 @@ class StrapiWrapper
         $this->timeout = config('strapi-wrapper.timeout');
         $this->debugLoggingEnabled = config('strapi-wrapper.log_enabled');
 
-        $allowedAuthMethods = ['public', 'password', 'token'];
-        if ($this->apiVersion <= 3) {
-            throw new ConnectionError('API version not supported');
+        $allowedVersions = [4, 5];
+        if (! in_array($this->apiVersion, $allowedVersions, true)) {
+            throw new ConnectionError(
+                "API version {$this->apiVersion} is not supported. Supported versions: ".
+                implode(', ', $allowedVersions)
+            );
         }
 
+        $allowedAuthMethods = ['public', 'password', 'token'];
         if (! in_array($this->authMethod, $allowedAuthMethods, true)) {
             throw new UnknownAuthMethod;
         }
