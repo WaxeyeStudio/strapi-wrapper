@@ -59,9 +59,7 @@ class StrapiWrapper
 
     public function setTimeout(int $timeout): StrapiWrapper
     {
-        if ($timeout) {
-            $this->timeout = $timeout;
-        }
+        $this->timeout = $timeout;
 
         return $this;
     }
@@ -387,11 +385,11 @@ class StrapiWrapper
         return $array;
     }
 
-    protected function squashDataFields($array): array|null
+    protected function squashDataFields($array): array
     {
-        // Check if this response is an array, if not there is nothing to squash
+        // Check if this response is an array, if not return wrapped in array
         if (!is_array($array)) {
-            return [$array];
+            return $array === null ? [] : [$array];
         }
 
         $modifiedArray = [];
