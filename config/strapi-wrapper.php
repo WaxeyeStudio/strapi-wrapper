@@ -17,7 +17,7 @@ return [
     'url' => $strapiUrl,
     'auth' => env('STRAPI_AUTH', 'public'), // VALID OPTIONS ARE 'public', 'password', 'token'
     'version' => $apiVersion,
-    'compatability_mode' => env('STRAPI_V4_COMPATIBILITY', false),
+    'compatibility_mode' => env('STRAPI_V4_COMPATIBILITY', false),
     'cache' => env('STRAPI_CACHE', 3600),
 
     'username' => env('STRAPI_USER', ''),
