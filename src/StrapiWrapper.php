@@ -432,17 +432,63 @@ class StrapiWrapper
             } else {
                 // NB: By default strapi returns markdown, but popular editor plugins make the return HTML
 
-                // Pattern for HTML img tags with relative URLs
-                // Matches: <img ... src="/uploads/image.jpg" ...> or <img ... src='/uploads/image.jpg' ...>
-                // Captures: (1) img attributes before src, (2) the relative URL path
-                // Excludes: URLs starting with http, https, or ftp (already absolute)
+                /**
+                 * HTML Image Pattern: Converts relative URLs in HTML img tags to absolute URLs
+                 *
+                 * Pattern: /<img([^>]*) src=[\'|"][^http|ftp|https]([^"|^\']*)\"/
+                 *
+                 * Breakdown:
+                 * - <img          : Matches the opening img tag
+                 * - ([^>]*)       : Capture group 1 - captures any attributes before src (e.g., class, alt, id)
+                 * - src=          : Matches the src attribute
+                 * - [\'|"]        : Matches either single or double quote
+                 * - [^http|ftp|https] : Negative character class - excludes URLs starting with h, t, p, f (to skip absolute URLs)
+                 * - ([^"|^\']*)   : Capture group 2 - captures the relative URL path until quote is found
+                 * - \"            : Matches the closing double quote
+                 *
+                 * Examples of what this pattern matches:
+                 * - <img src="/uploads/image.jpg">           → Captures: "", "/uploads/image.jpg"
+                 * - <img class="hero" src="/media/pic.png"> → Captures: "class=\"hero\"", "/media/pic.png"
+                 * - <img alt="Photo" src='/files/doc.pdf'>  → Captures: "alt=\"Photo\"", "/files/doc.pdf"
+                 *
+                 * Examples of what this pattern DOES NOT match (skipped):
+                 * - <img src="https://example.com/image.jpg"> (absolute URL with https)
+                 * - <img src="http://cdn.com/photo.png">      (absolute URL with http)
+                 * - <img src="ftp://server.com/file.jpg">     (absolute URL with ftp)
+                 *
+                 * Replacement: Prepends the configured imageUrl to the captured relative path
+                 */
                 /** @noinspection RegExpDuplicateCharacterInClass */
                 $html_pattern = '/<img([^>]*) src=[\'|"][^http|ftp|https]([^"|^\']*)\"/';
                 $html_rewrite = '<img${1} src="'.$this->imageUrl.'/${2}"';
 
-                // Pattern for Markdown image syntax with relative URLs
-                // Matches: ![alt text](/uploads/image.jpg)
-                // Captures: (1) alt text, (2) the relative URL path
+                /**
+                 * Markdown Image Pattern: Converts relative URLs in Markdown image syntax to absolute URLs
+                 *
+                 * Pattern: /!\[(.*)]\((.*)\)/
+                 *
+                 * Breakdown:
+                 * - !             : Matches the exclamation mark that starts Markdown image syntax
+                 * - \[            : Matches the opening square bracket (escaped)
+                 * - (.*)          : Capture group 1 - captures the alt text (any characters)
+                 * - ]             : Matches the closing square bracket
+                 * - \(            : Matches the opening parenthesis (escaped)
+                 * - (.*)          : Capture group 2 - captures the image URL/path (any characters)
+                 * - \)            : Matches the closing parenthesis (escaped)
+                 *
+                 * Examples of what this pattern matches:
+                 * - ![Alt text](/uploads/image.jpg)           → Captures: "Alt text", "/uploads/image.jpg"
+                 * - ![Photo](/media/photo.png)                → Captures: "Photo", "/media/photo.png"
+                 * - ![](/files/document.pdf)                  → Captures: "", "/files/document.pdf"
+                 * - ![Hero image](https://example.com/img.jpg) → Captures: "Hero image", "https://example.com/img.jpg"
+                 *
+                 * Note: This pattern matches ALL Markdown images (both relative and absolute URLs).
+                 * The replacement prepends imageUrl to all captured paths, so absolute URLs will
+                 * become malformed (e.g., "https://cdn.com/https://example.com/image.jpg").
+                 * Consider adding negative lookahead (?!http|https|ftp) after \( to skip absolute URLs.
+                 *
+                 * Replacement: Prepends the configured imageUrl to the captured path
+                 */
                 $markdown_pattern = '/!\[(.*)]\((.*)\)/';
                 $markdown_rewrite = '![$1]('.$this->imageUrl.'$2)';
                 $array[$key] = preg_replace([$html_pattern, $markdown_pattern], [$html_rewrite, $markdown_rewrite], $item);
