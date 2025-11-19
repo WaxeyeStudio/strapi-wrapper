@@ -522,17 +522,17 @@ class StrapiWrapper
         });
 
         if ($response && ! $response->successful()) {
-            $context = [
-                'url' => $query,
-                'status' => $response->status(),
-                'response_body' => $response->body(),
-            ];
-
             if ($response->status() === 400) {
-                throw new BadRequest($query.' '.$response->body(), 400, null, null, true, $context);
+                $errorMessage = $this->extractErrorMessage($response);
+                $context = $this->buildRequestContext('POST', $query, $response, $content);
+                $this->logError($errorMessage, 'POST', $query, $response, $content);
+                throw new BadRequest($query.' '.$errorMessage, 400, null, null, false, $context);
             }
 
-            throw new UnknownError('Error posting to strapi on '.$query, $response->status(), null, null, true, $context);
+            $errorMessage = $this->extractErrorMessage($response, 'Unknown error');
+            $context = $this->buildRequestContext('POST', $query, $response, $content);
+            $this->logError($errorMessage, 'POST', $query, $response, $content);
+            throw new UnknownError('['.$response->status().'] '.$query.' '.$errorMessage, $response->status(), null, null, false, $context);
         }
 
         // Log successful response

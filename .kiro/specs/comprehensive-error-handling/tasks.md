@@ -99,8 +99,8 @@
     - Pass context to UnknownError exception
     - _Requirements: 1.1, 1.2, 1.3, 2.1, 3.1, 3.2_
 
-- [ ] 5. Refactor postRequest() error handling
-  - [ ] 5.1 Update 400 error handling in postRequest()
+- [x] 5. Refactor postRequest() error handling
+  - [x] 5.1 Update 400 error handling in postRequest()
     - Extract error message using extractErrorMessage()
     - Build context using buildRequestContext() with POST method and request body
     - Call logError() with 'debug' level before throwing
@@ -108,7 +108,7 @@
     - Pass context to BadRequest exception
     - _Requirements: 1.1, 1.2, 1.3, 1.4, 2.2, 3.2_
   
-  - [ ] 5.2 Update UnknownError handling in postRequest()
+  - [x] 5.2 Update UnknownError handling in postRequest()
     - Extract error message using extractErrorMessage()
     - Build context using buildRequestContext() with POST method and request body
     - Call logError() with appropriate level (error for 500+, debug for others)
