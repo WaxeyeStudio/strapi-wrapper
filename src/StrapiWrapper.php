@@ -415,9 +415,14 @@ class StrapiWrapper
 
     protected function squashDataFields($array): array
     {
+        // Handle null input explicitly
+        if ($array === null) {
+            return [];
+        }
+
         // Check if this response is an array, if not return wrapped in array
         if (! is_array($array)) {
-            return $array === null ? [] : [$array];
+            return [$array];
         }
 
         $modifiedArray = [];
