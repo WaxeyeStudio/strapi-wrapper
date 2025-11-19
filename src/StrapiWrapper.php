@@ -104,13 +104,19 @@ class StrapiWrapper
 
             $response = $client->post($query, ['data' => $content['data']]);
             if (! $response->ok()) {
+                $context = [
+                    'url' => $query,
+                    'status' => $response->status(),
+                    'response_body' => $response->body(),
+                ];
+
                 if ($response->status() === 400) {
                     $json = $response->json();
                     $this->log('Post error', 'error', $json);
-                    throw new BadRequest($query.' '.$json['error']['name'].' - '.$json['error']['message'], 400);
+                    throw new BadRequest($query.' '.$json['error']['name'].' - '.$json['error']['message'], 400, null, null, true, $context);
                 }
 
-                throw new UnknownError('Error posting to strapi on '.$query, $response->status());
+                throw new UnknownError('Error posting to strapi on '.$query, $response->status(), null, null, true, $context);
             }
 
             return $response;
@@ -226,11 +232,17 @@ class StrapiWrapper
         }
 
         if ($response && ! $response->successful()) {
+            $context = [
+                'url' => $query,
+                'status' => $response->status(),
+                'response_body' => $response->body(),
+            ];
+
             if ($response->status() === 400) {
-                throw new BadRequest($query.' '.$response->body(), 400);
+                throw new BadRequest($query.' '.$response->body(), 400, null, null, true, $context);
             }
 
-            throw new UnknownError('Error posting to strapi on '.$query, $response->status());
+            throw new UnknownError('Error posting to strapi on '.$query, $response->status(), null, null, true, $context);
         }
 
         return $response;
@@ -259,19 +271,25 @@ class StrapiWrapper
             return $response->json();
         }
 
+        $context = [
+            'url' => $request,
+            'status' => $response->status(),
+            'response_body' => $response->body(),
+        ];
+
         if ($response->status() === 400) {
-            throw new BadRequest($request.' '.$response->body(), 400);
+            throw new BadRequest($request.' '.$response->body(), 400, null, null, true, $context);
         }
 
         if ($response->status() === 404) {
-            throw new NotFoundError($request.' '.$response->body(), 404);
+            throw new NotFoundError($request.' '.$response->body(), 404, null, null, true, $context);
         }
 
         if ($response->status() === 401 || $response->status() === 403) {
-            throw new PermissionDenied($request);
+            throw new PermissionDenied($request, $response->status(), null, null, true, $context);
         }
 
-        throw new UnknownError('['.$response->status().'] '.$request."\n".$response->body());
+        throw new UnknownError('['.$response->status().'] '.$request."\n".$response->body(), $response->status(), null, null, true, $context);
     }
 
     protected function generateQueryUrl(string $type, string|array $sortBy, string $sortOrder, int $limit, int $page, string $customQuery = ''): string
