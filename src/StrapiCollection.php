@@ -12,6 +12,10 @@ use SilentWeb\StrapiWrapper\Exceptions\UnknownError;
 
 class StrapiCollection extends StrapiWrapper
 {
+    private const POPULATE_NONE = 'none';
+    private const POPULATE_ALL = 'all';
+    private const POPULATE_CUSTOM = 'custom';
+
     private array $collection = [];
 
     private array $meta = [];
@@ -32,7 +36,9 @@ class StrapiCollection extends StrapiWrapper
 
     private array $fields = [];
 
-    private ?array $populate = [];
+    private string $populateMode = self::POPULATE_ALL;
+
+    private array $populateFields = [];
 
     private int $deep;
 
@@ -198,35 +204,38 @@ class StrapiCollection extends StrapiWrapper
 
     private function getPopulateQuery(): string
     {
-        if (empty($this->populate)) {
-            // Only compatible with v4 and v5
-            // V4 - https://github.com/Barelydead/strapi-plugin-populate-deep
-            if ($this->apiVersion === 4 && $this->deep > 0) {
-                return 'populate=deep,'.$this->deep;
-            }
-
-            // V5 - https://github.com/NEDDL/strapi-v5-plugin-populate-deep
-            if ($this->apiVersion === 5 && $this->deep > 0) {
-                return 'pLevel='.$this->deep;
-            }
-
-            if (is_null($this->populate)) {
-                return '';
-            }
-
-            return 'populate=*';
+        // Explicit no-populate mode
+        if ($this->populateMode === self::POPULATE_NONE) {
+            return '';
         }
 
-        $string = [];
-        foreach ($this->populate as $key => $value) {
-            if (is_numeric($key)) {
-                $string[] = "populate[$value][populate]=*";
-            } else {
-                $string[] = "populate[$key][populate]=$value";
+        // Custom populate with specific fields
+        if ($this->populateMode === self::POPULATE_CUSTOM) {
+            $string = [];
+            foreach ($this->populateFields as $key => $value) {
+                if (is_numeric($key)) {
+                    $string[] = "populate[$value][populate]=*";
+                } else {
+                    $string[] = "populate[$key][populate]=$value";
+                }
             }
+
+            return implode('&', $string);
         }
 
-        return implode('&', $string);
+        // POPULATE_ALL mode - use deep populate if configured, otherwise populate=*
+        // Only compatible with v4 and v5
+        // V4 - https://github.com/Barelydead/strapi-plugin-populate-deep
+        if ($this->apiVersion === 4 && $this->deep > 0) {
+            return 'populate=deep,'.$this->deep;
+        }
+
+        // V5 - https://github.com/NEDDL/strapi-v5-plugin-populate-deep
+        if ($this->apiVersion === 5 && $this->deep > 0) {
+            return 'pLevel='.$this->deep;
+        }
+
+        return 'populate=*';
     }
 
     /**
@@ -1002,7 +1011,41 @@ class StrapiCollection extends StrapiWrapper
      */
     public function populate(array $populateQuery = []): static
     {
-        $this->populate = $populateQuery;
+        if (empty($populateQuery)) {
+            $this->populateMode = self::POPULATE_ALL;
+            $this->populateFields = [];
+        } else {
+            $this->populateMode = self::POPULATE_CUSTOM;
+            $this->populateFields = $populateQuery;
+        }
+
+        return $this;
+    }
+
+    /**
+     * Explicitly disable population of relations in the query results.
+     *
+     * Prevents any relations from being populated, overriding both populate() and deep()
+     * settings. Useful when you only need the main record data without any related records.
+     *
+     * @return static The collection instance for method chaining
+     *
+     * @example
+     * // Get posts without any populated relations
+     * $posts = StrapiWrapper::collection('posts')
+     *     ->noPopulate()
+     *     ->query();
+     * @example
+     * // Override previous populate settings
+     * $posts = StrapiWrapper::collection('posts')
+     *     ->populate(['author'])
+     *     ->noPopulate()  // This takes precedence
+     *     ->query();
+     */
+    public function noPopulate(): static
+    {
+        $this->populateMode = self::POPULATE_NONE;
+        $this->populateFields = [];
 
         return $this;
     }
