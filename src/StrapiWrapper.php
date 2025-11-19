@@ -356,6 +356,31 @@ class StrapiWrapper
         return $this->apiUrl.'/'.$type;
     }
 
+    /**
+     * Converts relative URLs to absolute URLs in Strapi response data.
+     *
+     * This method recursively processes arrays to convert relative image/file URLs to absolute URLs
+     * by prepending the configured image URL. It handles three cases:
+     * 1. Direct file objects with 'url' and 'ext' keys (e.g., uploaded files)
+     * 2. HTML img tags with relative src attributes
+     * 3. Markdown image syntax with relative paths
+     *
+     * @param  array  $array  The response array from Strapi API containing URLs to convert
+     * @return array The processed array with all relative URLs converted to absolute URLs
+     *
+     * @example
+     * // File object conversion
+     * Input:  ['url' => '/uploads/image.jpg', 'ext' => '.jpg']
+     * Output: ['url' => 'https://example.com/uploads/image.jpg', 'ext' => '.jpg']
+     * @example
+     * // HTML content conversion
+     * Input:  ['content' => '<img src="/uploads/photo.jpg" alt="Photo">']
+     * Output: ['content' => '<img src="https://example.com/uploads/photo.jpg" alt="Photo">']
+     * @example
+     * // Markdown content conversion
+     * Input:  ['description' => '![Alt text](/uploads/image.jpg)']
+     * Output: ['description' => '![Alt text](https://example.com/uploads/image.jpg)']
+     */
     protected function convertToAbsoluteUrls(array $array): array
     {
         foreach ($array as $key => $item) {
@@ -375,12 +400,17 @@ class StrapiWrapper
             } else {
                 // NB: By default strapi returns markdown, but popular editor plugins make the return HTML
 
-                // If HTML Text
+                // Pattern for HTML img tags with relative URLs
+                // Matches: <img ... src="/uploads/image.jpg" ...> or <img ... src='/uploads/image.jpg' ...>
+                // Captures: (1) img attributes before src, (2) the relative URL path
+                // Excludes: URLs starting with http, https, or ftp (already absolute)
                 /** @noinspection RegExpDuplicateCharacterInClass */
                 $html_pattern = '/<img([^>]*) src=[\'|"][^http|ftp|https]([^"|^\']*)\"/';
                 $html_rewrite = '<img${1} src="'.$this->imageUrl.'/${2}"';
 
-                // If Markdown text
+                // Pattern for Markdown image syntax with relative URLs
+                // Matches: ![alt text](/uploads/image.jpg)
+                // Captures: (1) alt text, (2) the relative URL path
                 $markdown_pattern = '/!\[(.*)]\((.*)\)/';
                 $markdown_rewrite = '![$1]('.$this->imageUrl.'$2)';
                 $array[$key] = preg_replace([$html_pattern, $markdown_pattern], [$html_rewrite, $markdown_rewrite], $item);
@@ -390,6 +420,31 @@ class StrapiWrapper
         return $array;
     }
 
+    /**
+     * Converts image and file fields from object format to URL strings.
+     *
+     * This method recursively processes arrays looking for image/file objects (identified by having
+     * both 'url' and 'mime' keys) and simplifies them to just the URL string. The full metadata is
+     * preserved in a parallel key with '_squash' suffix for non-numeric keys, allowing access to
+     * additional file information like dimensions, mime type, size, etc.
+     *
+     * @param  array  $array  The array to process for image field conversion
+     * @param  string|null  $parent  The parent key path for nested fields (used internally for recursion)
+     * @return array The processed array with image fields converted to URL strings
+     *
+     * @example
+     * // Single image field conversion
+     * Input:  ['avatar' => ['url' => '/uploads/pic.jpg', 'mime' => 'image/jpeg', 'width' => 100, 'height' => 100]]
+     * Output: ['avatar' => '/uploads/pic.jpg', 'avatar_squash' => ['url' => '/uploads/pic.jpg', 'mime' => 'image/jpeg', 'width' => 100, 'height' => 100]]
+     * @example
+     * // Array of images (numeric keys - no _squash created)
+     * Input:  ['gallery' => [0 => ['url' => '/img1.jpg', 'mime' => 'image/jpeg'], 1 => ['url' => '/img2.jpg', 'mime' => 'image/png']]]
+     * Output: ['gallery' => [0 => '/img1.jpg', 1 => '/img2.jpg']]
+     * @example
+     * // Nested structure with mixed content
+     * Input:  ['user' => ['name' => 'John', 'avatar' => ['url' => '/avatar.jpg', 'mime' => 'image/jpeg']]]
+     * Output: ['user' => ['name' => 'John', 'avatar' => '/avatar.jpg', 'avatar_squash' => [...]]]
+     */
     protected function convertImageFields($array, $parent = null): array
     {
         if (! $parent) {
@@ -413,6 +468,38 @@ class StrapiWrapper
         return $array;
     }
 
+    /**
+     * Recursively flattens Strapi v4/v5 response structure by removing 'data' and 'attributes' wrapper fields.
+     *
+     * Strapi v4 and v5 wrap response data in nested 'data' and 'attributes' objects, making it cumbersome
+     * to access actual content. This method flattens the structure by merging these wrapper fields into
+     * their parent, providing direct access to the actual data fields. It handles ID conflicts by renaming
+     * nested 'id' fields to 'data_id' when necessary.
+     *
+     * @param  array|null  $array  The response array from Strapi API to flatten
+     * @return array The flattened array with 'data' and 'attributes' wrappers removed
+     *
+     * @example
+     * // Simple attribute squashing
+     * Input:  ['data' => ['id' => 1, 'attributes' => ['title' => 'Hello', 'content' => 'World']]]
+     * Output: ['id' => 1, 'title' => 'Hello', 'content' => 'World']
+     * @example
+     * // Nested data with relationships
+     * Input:  ['data' => ['id' => 1, 'attributes' => ['title' => 'Post', 'author' => ['data' => ['id' => 5, 'attributes' => ['name' => 'John']]]]]]
+     * Output: ['id' => 1, 'title' => 'Post', 'author' => ['id' => 5, 'name' => 'John']]
+     * @example
+     * // Handling null input
+     * Input:  null
+     * Output: []
+     * @example
+     * // Handling non-array input
+     * Input:  'simple string'
+     * Output: ['simple string']
+     * @example
+     * // ID conflict resolution
+     * Input:  ['id' => 1, 'data' => ['id' => 2, 'attributes' => ['name' => 'Test']]]
+     * Output: ['id' => 1, 'data_id' => 2, 'name' => 'Test']
+     */
     protected function squashDataFields($array): array
     {
         // Handle null input explicitly
