@@ -399,7 +399,7 @@ class StrapiCollection extends StrapiWrapper
     /**
      * @return $this
      */
-    public function setOptions(array $options): StrapiCollection
+    public function setOptions(array $options): static
     {
         $configurableOptions = [
             'absoluteUrl', 'squashImage', 'includeDrafts',
@@ -421,7 +421,7 @@ class StrapiCollection extends StrapiWrapper
      *
      * @return $this
      */
-    public function absolute(bool $setting = true): StrapiCollection
+    public function absolute(bool $setting = true): static
     {
         $this->absoluteUrl = $setting;
 
@@ -433,7 +433,7 @@ class StrapiCollection extends StrapiWrapper
      *
      * @return $this
      */
-    public function squash(bool $setting = true): StrapiCollection
+    public function squash(bool $setting = true): static
     {
         $this->squashImage = $setting;
 
@@ -448,7 +448,7 @@ class StrapiCollection extends StrapiWrapper
      *
      * @return $this
      */
-    public function sort(string|array $sortBy): StrapiCollection
+    public function sort(string|array $sortBy): static
     {
         $this->sortBy = $sortBy;
 
@@ -458,7 +458,7 @@ class StrapiCollection extends StrapiWrapper
     /**
      * @return $this
      */
-    public function limit(int $limit): StrapiCollection
+    public function limit(int $limit): static
     {
         $this->limit = $limit;
 
@@ -468,7 +468,7 @@ class StrapiCollection extends StrapiWrapper
     /**
      * @return $this
      */
-    public function page(int $page): StrapiCollection
+    public function page(int $page): static
     {
         $this->page = $page;
 
@@ -522,7 +522,7 @@ class StrapiCollection extends StrapiWrapper
      *
      * @return $this
      */
-    public function deep(int $depth = 1): StrapiCollection
+    public function deep(int $depth = 1): static
     {
         $this->deep = $depth;
 
@@ -541,7 +541,7 @@ class StrapiCollection extends StrapiWrapper
      *
      * @return $this
      */
-    public function order(string|array $sortBy, bool $ascending = false): StrapiCollection
+    public function order(string|array $sortBy, bool $ascending = false): static
     {
         $this->sortBy = $sortBy;
         $this->sortOrder = $ascending ? 'ASC' : 'DESC';
@@ -552,14 +552,14 @@ class StrapiCollection extends StrapiWrapper
     /**
      * @return $this
      */
-    public function populate(array $populateQuery = []): StrapiCollection
+    public function populate(array $populateQuery = []): static
     {
         $this->populate = $populateQuery;
 
         return $this;
     }
 
-    public function flatten(bool $flatten = true): StrapiCollection
+    public function flatten(bool $flatten = true): static
     {
         $this->flatten = $flatten;
 
