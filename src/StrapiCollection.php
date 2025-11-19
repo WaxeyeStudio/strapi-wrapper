@@ -58,7 +58,10 @@ class StrapiCollection extends StrapiWrapper
                 return $result;
             }
         } catch (Exception $ex) {
-            $this->log($ex);
+            $this->log($ex->getMessage(), 'error', [
+                'exception' => get_class($ex),
+                'trace' => $ex->getTraceAsString(),
+            ]);
         }
 
         abort($failCode);
@@ -274,7 +277,10 @@ class StrapiCollection extends StrapiWrapper
             $data = $this->processRequestResponse($data);
         } catch (Exception $e) {
             // This hasn't worked, so lets try querying the main collection
-            $this->log('Custom query failed first attempt', 'debug', $e->getTrace());
+            $this->log('Custom query failed first attempt: '.$e->getMessage(), 'debug', [
+                'exception' => get_class($e),
+                'trace' => $e->getTraceAsString(),
+            ]);
             try {
                 $currentFilters = $this->fields;
                 $this->clearAllFilters();
@@ -282,7 +288,10 @@ class StrapiCollection extends StrapiWrapper
                 $data = $this->findOne($cache);
             } catch (Exception $e) {
                 // Still failed, so we return null;
-                $this->log('Custom query failed second attempt', 'debug', $e->getTrace());
+                $this->log('Custom query failed second attempt: '.$e->getMessage(), 'debug', [
+                    'exception' => get_class($e),
+                    'trace' => $e->getTraceAsString(),
+                ]);
                 $this->fields = $currentFilters;
 
                 return null;
