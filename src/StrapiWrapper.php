@@ -2,7 +2,6 @@
 
 namespace SilentWeb\StrapiWrapper;
 
-use Exception;
 use GuzzleHttp\Promise\PromiseInterface;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\PendingRequest;
@@ -205,6 +204,85 @@ class StrapiWrapper
         }
     }
 
+    /**
+     * Execute an HTTP request with automatic retry logic for transient failures.
+     *
+     * This method wraps HTTP requests with retry logic that handles transient failures
+     * such as rate limiting (429), bad gateway (502), service unavailable (503), and
+     * gateway timeout (504). It uses exponential backoff between retry attempts.
+     *
+     * @param  callable  $request  A callable that returns a Response object
+     * @return Response The successful response
+     *
+     * @throws ConnectionError When connection errors occur after all retries
+     * @throws UnknownError When all retry attempts are exhausted
+     */
+    protected function executeWithRetry(callable $request): Response
+    {
+        $maxAttempts = config('strapi-wrapper.retry_attempts', 3);
+        $baseDelay = config('strapi-wrapper.retry_delay', 100);
+        $retryStatuses = config('strapi-wrapper.retry_on_status', [429, 502, 503, 504]);
+
+        $attempt = 0;
+        $lastException = null;
+        $lastResponse = null;
+
+        while ($attempt < $maxAttempts) {
+            try {
+                $response = $request();
+
+                // If successful or non-retryable error, return immediately
+                if ($response->successful() || ! in_array($response->status(), $retryStatuses, true)) {
+                    return $response;
+                }
+
+                // Retryable error - log and continue to retry logic
+                $lastResponse = $response;
+                $this->log(
+                    "Retryable error {$response->status()} on attempt ".($attempt + 1),
+                    'warning',
+                    [
+                        'attempt' => $attempt + 1,
+                        'max_attempts' => $maxAttempts,
+                        'status' => $response->status(),
+                    ]
+                );
+            } catch (ConnectionException $e) {
+                // Connection errors are retryable
+                $lastException = $e;
+                $this->log(
+                    'Connection error on attempt '.($attempt + 1).': '.$e->getMessage(),
+                    'warning',
+                    [
+                        'attempt' => $attempt + 1,
+                        'max_attempts' => $maxAttempts,
+                        'exception' => get_class($e),
+                    ]
+                );
+            }
+
+            $attempt++;
+
+            // If not last attempt, wait with exponential backoff
+            if ($attempt < $maxAttempts) {
+                $delay = $baseDelay * pow(2, $attempt - 1); // Exponential backoff
+                usleep($delay * 1000); // Convert to microseconds
+            }
+        }
+
+        // All retries exhausted
+        if ($lastException) {
+            throw new ConnectionError($lastException);
+        }
+
+        if ($lastResponse) {
+            // Return the last response so the calling code can handle the error
+            return $lastResponse;
+        }
+
+        throw new UnknownError("Request failed after {$maxAttempts} attempts", 503);
+    }
+
     protected function log($message, $level = 'error', $context = [])
     {
         if ($this->debugLoggingEnabled) {
@@ -231,12 +309,9 @@ class StrapiWrapper
             $postClient = $postClient->withToken($this->getToken());
         }
 
-        $response = null;
-        try {
-            $response = $postClient->post($query, $content);
-        } catch (Exception $exception) {
-            throw new UnknownError($exception);
-        }
+        $response = $this->executeWithRetry(function () use ($postClient, $query, $content) {
+            return $postClient->post($query, $content);
+        });
 
         if ($response && ! $response->successful()) {
             $context = [
@@ -285,11 +360,13 @@ class StrapiWrapper
             'auth_method' => $this->authMethod,
         ]);
 
-        if ($this->authMethod === 'public') {
-            $response = $this->httpClient()->get($request);
-        } else {
-            $response = $this->httpClient()->withToken($this->getToken())->get($request);
-        }
+        $response = $this->executeWithRetry(function () use ($request) {
+            if ($this->authMethod === 'public') {
+                return $this->httpClient()->get($request);
+            } else {
+                return $this->httpClient()->withToken($this->getToken())->get($request);
+            }
+        });
 
         if ($response->ok()) {
             // Log successful response

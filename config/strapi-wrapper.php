@@ -46,4 +46,9 @@ return [
 
     // Log exceptions?
     'log_enabled' => env('STRAPI_LOG', false),
+
+    // Retry configuration for transient failures
+    'retry_attempts' => env('STRAPI_RETRY_ATTEMPTS', 3),
+    'retry_delay' => env('STRAPI_RETRY_DELAY', 100), // milliseconds
+    'retry_on_status' => [429, 502, 503, 504], // Transient error codes
 ];
