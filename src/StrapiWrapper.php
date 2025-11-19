@@ -462,7 +462,6 @@ class StrapiWrapper
      * @param  Response|null  $response  The HTTP response object (null for connection errors)
      * @param  array|null  $requestBody  The request body data (null for GET requests)
      * @param  array  $additionalContext  Additional context to include in the log
-     * @return void
      */
     protected function logError(
         string $message,

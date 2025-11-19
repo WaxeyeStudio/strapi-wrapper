@@ -6,8 +6,8 @@ use Throwable;
 
 class ConnectionError extends BaseException
 {
-    public function __construct(string $message = '', int $code = 0, ?Throwable $previous = null)
+    public function __construct(string $message = '', int $code = 0, ?Throwable $previous = null, array $context = [])
     {
-        parent::__construct('Error connecting to strapi ', $code, $message, $previous);
+        parent::__construct('Error connecting to strapi ', $code, $message, $previous, false, $context);
     }
 }

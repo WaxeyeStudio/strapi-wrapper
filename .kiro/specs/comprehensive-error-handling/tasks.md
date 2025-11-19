@@ -35,31 +35,31 @@
     - Only log if $this->debugLoggingEnabled is true
     - _Requirements: 2.1, 2.2, 2.3, 2.4_
 
-- [ ] 3. Update exception classes to remove internal logging
-  - [ ] 3.1 Update BadRequest exception constructor
+- [x] 3. Update exception classes to remove internal logging
+  - [x] 3.1 Update BadRequest exception constructor
     - Remove parent constructor's $writeToLog parameter (set to false)
     - Keep context parameter support
     - Logging will be handled before exception is thrown
     - _Requirements: 2.1, 2.2_
   
-  - [ ] 3.2 Update PermissionDenied exception constructor
+  - [x] 3.2 Update PermissionDenied exception constructor
     - Remove parent constructor's $writeToLog parameter (set to false)
     - Keep context parameter support
     - _Requirements: 2.1, 2.2_
   
-  - [ ] 3.3 Update NotFoundError exception constructor
+  - [x] 3.3 Update NotFoundError exception constructor
     - Remove the Log::debug() call from constructor
     - Remove parent constructor's $writeToLog parameter (set to false)
     - Keep context parameter support
     - _Requirements: 2.3_
   
-  - [ ] 3.4 Update UnknownError exception constructor
+  - [x] 3.4 Update UnknownError exception constructor
     - Update to accept context parameter
     - Remove parent constructor's $writeToLog parameter (set to false)
     - Pass context to parent BaseException
     - _Requirements: 2.1_
   
-  - [ ] 3.5 Update ConnectionError exception constructor
+  - [x] 3.5 Update ConnectionError exception constructor
     - Update to accept context parameter
     - Remove parent constructor's $writeToLog parameter (set to false)
     - Pass context to parent BaseException
