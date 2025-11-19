@@ -134,8 +134,8 @@
     - Pass context to UnknownError exception
     - _Requirements: 1.1, 1.2, 1.3, 2.1, 2.2, 3.1_
 
-- [ ] 7. Refactor loginStrapi() error handling
-  - [ ] 7.1 Update PermissionDenied handling in loginStrapi()
+- [x] 7. Refactor loginStrapi() error handling
+  - [x] 7.1 Update PermissionDenied handling in loginStrapi()
     - Extract error message using extractErrorMessage()
     - Build context using buildRequestContext()
     - Call logError() with 'debug' level before throwing
@@ -143,7 +143,7 @@
     - Pass context to PermissionDenied exception
     - _Requirements: 1.1, 1.2, 1.3, 2.2, 3.2_
   
-  - [ ] 7.2 Update BadRequest handling in loginStrapi()
+  - [x] 7.2 Update BadRequest handling in loginStrapi()
     - Extract error message using extractErrorMessage()
     - Build context using buildRequestContext()
     - Call logError() with 'debug' level before throwing
@@ -151,7 +151,7 @@
     - Pass context to BadRequest exception
     - _Requirements: 1.1, 1.2, 1.3, 2.2, 3.2_
   
-  - [ ] 7.3 Update UnknownError handling in loginStrapi()
+  - [x] 7.3 Update UnknownError handling in loginStrapi()
     - Extract error message using extractErrorMessage()
     - Build context using buildRequestContext()
     - Call logError() with 'error' level before throwing

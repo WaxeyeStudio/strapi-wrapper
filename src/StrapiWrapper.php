@@ -172,8 +172,9 @@ class StrapiWrapper
     protected function loginStrapi(): string
     {
         $login = null;
+        $url = $this->apiUrl.'/auth/local';
         try {
-            $login = $this->httpClient()->post($this->apiUrl.'/auth/local', [
+            $login = $this->httpClient()->post($url, [
                 'identifier' => $this->username,
                 'password' => $this->password,
             ]);
@@ -188,14 +189,23 @@ class StrapiWrapper
                 }
 
                 if ($login->status() === 403 || $login->status() === 401) {
-                    throw new PermissionDenied;
+                    $errorMessage = $this->extractErrorMessage($login);
+                    $context = $this->buildRequestContext('POST', $url, $login);
+                    $this->logError($errorMessage, 'POST', $url, $login);
+                    throw new PermissionDenied($url.' '.$errorMessage, $login->status(), null, null, false, $context);
                 }
 
                 if ($login->status() === 400) {
-                    throw new BadRequest('Bad request in strapi login', 400, $login->toException());
+                    $errorMessage = $this->extractErrorMessage($login);
+                    $context = $this->buildRequestContext('POST', $url, $login);
+                    $this->logError($errorMessage, 'POST', $url, $login);
+                    throw new BadRequest($url.' '.$errorMessage, 400, null, null, false, $context);
                 }
 
-                throw new UnknownError($login->toException());
+                $errorMessage = $this->extractErrorMessage($login, 'Unknown error');
+                $context = $this->buildRequestContext('POST', $url, $login);
+                $this->logError($errorMessage, 'POST', $url, $login);
+                throw new UnknownError('['.$login->status().'] '.$url.' '.$errorMessage, $login->status(), null, null, false, $context);
             }
 
             throw new \RuntimeException('Error initialising strapi wrapper');
