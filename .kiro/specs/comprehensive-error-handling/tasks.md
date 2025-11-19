@@ -65,8 +65,8 @@
     - Pass context to parent BaseException
     - _Requirements: 2.1_
 
-- [ ] 4. Refactor getRequestActual() error handling
-  - [ ] 4.1 Update 400 error handling in getRequestActual()
+- [x] 4. Refactor getRequestActual() error handling
+  - [x] 4.1 Update 400 error handling in getRequestActual()
     - Extract error message using extractErrorMessage()
     - Build context using buildRequestContext()
     - Call logError() with 'debug' level before throwing
@@ -74,7 +74,7 @@
     - Pass context to BadRequest exception
     - _Requirements: 1.1, 1.2, 1.3, 2.2, 3.2_
   
-  - [ ] 4.2 Update 404 error handling in getRequestActual()
+  - [x] 4.2 Update 404 error handling in getRequestActual()
     - Extract error message using extractErrorMessage()
     - Build context using buildRequestContext()
     - Call logError() with 'debug' level before throwing
@@ -82,7 +82,7 @@
     - Pass context to NotFoundError exception
     - _Requirements: 1.1, 1.2, 1.3, 2.3, 3.2_
   
-  - [ ] 4.3 Update 401/403 error handling in getRequestActual()
+  - [x] 4.3 Update 401/403 error handling in getRequestActual()
     - Extract error message using extractErrorMessage()
     - Build context using buildRequestContext()
     - Call logError() with 'debug' level before throwing
@@ -90,7 +90,7 @@
     - Pass context to PermissionDenied exception
     - _Requirements: 1.1, 1.2, 1.3, 2.2, 3.2_
   
-  - [ ] 4.4 Update UnknownError handling in getRequestActual()
+  - [x] 4.4 Update UnknownError handling in getRequestActual()
     - Extract error message using extractErrorMessage()
     - Build context using buildRequestContext()
     - Call logError() with 'error' level (status >= 500) before throwing

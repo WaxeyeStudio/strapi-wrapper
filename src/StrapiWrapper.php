@@ -588,25 +588,31 @@ class StrapiWrapper
             return $response->json();
         }
 
-        $context = [
-            'url' => $request,
-            'status' => $response->status(),
-            'response_body' => $response->body(),
-        ];
-
         if ($response->status() === 400) {
-            throw new BadRequest($request.' '.$response->body(), 400, null, null, true, $context);
+            $errorMessage = $this->extractErrorMessage($response);
+            $context = $this->buildRequestContext('GET', $request, $response);
+            $this->logError($errorMessage, 'GET', $request, $response);
+            throw new BadRequest($request.' '.$errorMessage, 400, null, null, false, $context);
         }
 
         if ($response->status() === 404) {
-            throw new NotFoundError($request.' '.$response->body(), 404, null, null, true, $context);
+            $errorMessage = $this->extractErrorMessage($response);
+            $context = $this->buildRequestContext('GET', $request, $response);
+            $this->logError($errorMessage, 'GET', $request, $response);
+            throw new NotFoundError($request.' '.$errorMessage, 404, null, null, false, $context);
         }
 
         if ($response->status() === 401 || $response->status() === 403) {
-            throw new PermissionDenied($request, $response->status(), null, null, true, $context);
+            $errorMessage = $this->extractErrorMessage($response);
+            $context = $this->buildRequestContext('GET', $request, $response);
+            $this->logError($errorMessage, 'GET', $request, $response);
+            throw new PermissionDenied($request.' '.$errorMessage, $response->status(), null, null, false, $context);
         }
 
-        throw new UnknownError('['.$response->status().'] '.$request."\n".$response->body(), $response->status(), null, null, true, $context);
+        $errorMessage = $this->extractErrorMessage($response, 'Unknown error');
+        $context = $this->buildRequestContext('GET', $request, $response);
+        $this->logError($errorMessage, 'GET', $request, $response);
+        throw new UnknownError('['.$response->status().'] '.$request.' '.$errorMessage, $response->status(), null, null, false, $context);
     }
 
     protected function generateQueryUrl(string $type, string|array $sortBy, string $sortOrder, int $limit, int $page, string $customQuery = ''): string
