@@ -219,6 +219,13 @@ class StrapiWrapper
             $content = ['data' => $content];
         }
 
+        // Log before making request
+        $this->log("Making POST request to: {$query}", 'debug', [
+            'method' => 'POST',
+            'url' => $query,
+            'auth_method' => $this->authMethod,
+        ]);
+
         $postClient = $this->httpClient();
         if ($this->authMethod !== 'public') {
             $postClient = $postClient->withToken($this->getToken());
@@ -245,6 +252,16 @@ class StrapiWrapper
             throw new UnknownError('Error posting to strapi on '.$query, $response->status(), null, null, true, $context);
         }
 
+        // Log successful response
+        if ($response && $response->successful()) {
+            $this->log("Successful POST request to: {$query}", 'debug', [
+                'method' => 'POST',
+                'url' => $query,
+                'status' => $response->status(),
+                'response_size' => strlen($response->body()),
+            ]);
+        }
+
         return $response;
     }
 
@@ -261,6 +278,13 @@ class StrapiWrapper
 
     private function getRequestActual($request)
     {
+        // Log before making request
+        $this->log("Making GET request to: {$request}", 'debug', [
+            'method' => 'GET',
+            'url' => $request,
+            'auth_method' => $this->authMethod,
+        ]);
+
         if ($this->authMethod === 'public') {
             $response = $this->httpClient()->get($request);
         } else {
@@ -268,6 +292,14 @@ class StrapiWrapper
         }
 
         if ($response->ok()) {
+            // Log successful response
+            $this->log("Successful GET request to: {$request}", 'debug', [
+                'method' => 'GET',
+                'url' => $request,
+                'status' => $response->status(),
+                'response_size' => strlen($response->body()),
+            ]);
+
             return $response->json();
         }
 
