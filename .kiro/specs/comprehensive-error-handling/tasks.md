@@ -159,15 +159,15 @@
     - Pass context to UnknownError exception
     - _Requirements: 1.1, 1.2, 1.3, 2.1, 3.1_
 
-- [ ] 8. Update executeWithRetry() logging
-  - [ ] 8.1 Enhance retry attempt logging
+- [x] 8. Update executeWithRetry() logging
+  - [x] 8.1 Enhance retry attempt logging
     - Update warning logs for retryable errors to use logError() method
     - Include full request context in retry logs
     - Ensure URL is included in all retry-related log messages
     - Keep log level as 'warning' for retry attempts
     - _Requirements: 1.1, 1.2, 1.3_
   
-  - [ ] 8.2 Update connection error logging in executeWithRetry()
+  - [x] 8.2 Update connection error logging in executeWithRetry()
     - Build context for connection errors (response will be null)
     - Call logError() with 'error' level for connection errors
     - Include attempt number and max attempts in context

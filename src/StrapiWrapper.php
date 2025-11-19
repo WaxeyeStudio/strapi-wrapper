@@ -220,12 +220,14 @@ class StrapiWrapper
      * gateway timeout (504). It uses exponential backoff between retry attempts.
      *
      * @param  callable  $request  A callable that returns a Response object
+     * @param  string  $method  The HTTP method (GET, POST, etc.) for logging context
+     * @param  string  $url  The request URL for logging context
      * @return Response The successful response
      *
      * @throws ConnectionError When connection errors occur after all retries
      * @throws UnknownError When all retry attempts are exhausted
      */
-    protected function executeWithRetry(callable $request): Response
+    protected function executeWithRetry(callable $request, string $method = 'UNKNOWN', string $url = ''): Response
     {
         $maxAttempts = config('strapi-wrapper.retry_attempts', 3);
         $baseDelay = config('strapi-wrapper.retry_delay', 100);
@@ -246,27 +248,43 @@ class StrapiWrapper
 
                 // Retryable error - log and continue to retry logic
                 $lastResponse = $response;
-                $this->log(
-                    "Retryable error {$response->status()} on attempt ".($attempt + 1),
-                    'warning',
-                    [
-                        'attempt' => $attempt + 1,
-                        'max_attempts' => $maxAttempts,
-                        'status' => $response->status(),
-                    ]
-                );
+
+                // Use logError with 'warning' level override for retry attempts
+                if ($this->debugLoggingEnabled) {
+                    $context = $this->buildRequestContext(
+                        $method,
+                        $url,
+                        $response,
+                        null,
+                        [
+                            'attempt' => $attempt + 1,
+                            'max_attempts' => $maxAttempts,
+                        ]
+                    );
+                    $context = $this->sanitizeLogData($context);
+                    Log::log('warning', "Retryable error {$response->status()} on attempt ".($attempt + 1)." for {$url}", $context);
+                }
             } catch (ConnectionException $e) {
                 // Connection errors are retryable
                 $lastException = $e;
-                $this->log(
-                    'Connection error on attempt '.($attempt + 1).': '.$e->getMessage(),
-                    'warning',
-                    [
-                        'attempt' => $attempt + 1,
-                        'max_attempts' => $maxAttempts,
-                        'exception' => get_class($e),
-                    ]
-                );
+
+                // Build context for connection errors (response will be null)
+                if ($this->debugLoggingEnabled) {
+                    $context = $this->buildRequestContext(
+                        $method,
+                        $url,
+                        null,
+                        null,
+                        [
+                            'attempt' => $attempt + 1,
+                            'max_attempts' => $maxAttempts,
+                            'exception' => get_class($e),
+                            'exception_message' => $e->getMessage(),
+                        ]
+                    );
+                    $context = $this->sanitizeLogData($context);
+                    Log::log('error', 'Connection error on attempt '.($attempt + 1)." for {$url}: ".$e->getMessage(), $context);
+                }
             }
 
             $attempt++;
@@ -527,7 +545,7 @@ class StrapiWrapper
 
         $response = $this->executeWithRetry(function () use ($postClient, $query, $content) {
             return $postClient->post($query, $content);
-        });
+        }, 'POST', $query);
 
         if ($response && ! $response->successful()) {
             if ($response->status() === 400) {
@@ -582,7 +600,7 @@ class StrapiWrapper
             } else {
                 return $this->httpClient()->withToken($this->getToken())->get($request);
             }
-        });
+        }, 'GET', $request);
 
         if ($response->ok()) {
             // Log successful response
