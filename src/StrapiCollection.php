@@ -1164,4 +1164,172 @@ class StrapiCollection extends StrapiWrapper
 
         return $this->httpClient()->withToken($this->getToken())->delete($deleteUrl);
     }
+
+    /**
+     * Create multiple records in a single batch operation.
+     *
+     * Iterates through the provided records and creates each one individually.
+     * Collects successful and failed operations, continuing to process remaining
+     * items even if some fail. Useful for bulk imports or data migrations.
+     *
+     * @param  array  $records  Array of record data to create
+     * @return array Results with 'success' and 'failed' keys containing operation results
+     *
+     * @example
+     * // Create multiple posts at once
+     * $results = StrapiWrapper::collection('posts')->batchCreate([
+     *     ['title' => 'Post 1', 'content' => 'Content 1'],
+     *     ['title' => 'Post 2', 'content' => 'Content 2'],
+     *     ['title' => 'Post 3', 'content' => 'Content 3']
+     * ]);
+     * // $results['success'] contains successfully created records
+     * // $results['failed'] contains records that failed with error messages
+     */
+    public function batchCreate(array $records): array
+    {
+        $results = [
+            'success' => [],
+            'failed' => [],
+        ];
+
+        foreach ($records as $index => $record) {
+            try {
+                $response = $this->post($record);
+                $results['success'][] = [
+                    'index' => $index,
+                    'data' => $response->json(),
+                ];
+            } catch (Exception $e) {
+                $results['failed'][] = [
+                    'index' => $index,
+                    'record' => $record,
+                    'error' => $e->getMessage(),
+                ];
+                $this->log(
+                    "Batch create failed for record at index {$index}: ".$e->getMessage(),
+                    'error'
+                );
+            }
+        }
+
+        return $results;
+    }
+
+    /**
+     * Update multiple records in a single batch operation.
+     *
+     * Iterates through the provided records and updates each one individually.
+     * Each record must include an 'id' field. Collects successful and failed
+     * operations, continuing to process remaining items even if some fail.
+     *
+     * @param  array  $records  Array of records with 'id' and data to update
+     * @return array Results with 'success' and 'failed' keys containing operation results
+     *
+     * @example
+     * // Update multiple posts at once
+     * $results = StrapiWrapper::collection('posts')->batchUpdate([
+     *     ['id' => 1, 'title' => 'Updated Title 1'],
+     *     ['id' => 2, 'title' => 'Updated Title 2'],
+     *     ['id' => 3, 'status' => 'published']
+     * ]);
+     * // $results['success'] contains successfully updated records
+     * // $results['failed'] contains records that failed with error messages
+     */
+    public function batchUpdate(array $records): array
+    {
+        $results = [
+            'success' => [],
+            'failed' => [],
+        ];
+
+        foreach ($records as $index => $record) {
+            if (! isset($record['id'])) {
+                $results['failed'][] = [
+                    'index' => $index,
+                    'record' => $record,
+                    'error' => 'Missing id field',
+                ];
+
+                continue;
+            }
+
+            $id = $record['id'];
+            unset($record['id']);
+
+            try {
+                $response = $this->put($id, $record);
+                $results['success'][] = [
+                    'index' => $index,
+                    'id' => $id,
+                    'data' => $response->json(),
+                ];
+            } catch (Exception $e) {
+                $results['failed'][] = [
+                    'index' => $index,
+                    'id' => $id,
+                    'record' => $record,
+                    'error' => $e->getMessage(),
+                ];
+                $this->log(
+                    "Batch update failed for record {$id} at index {$index}: ".$e->getMessage(),
+                    'error'
+                );
+            }
+        }
+
+        return $results;
+    }
+
+    /**
+     * Delete multiple records in a single batch operation.
+     *
+     * Iterates through the provided IDs and deletes each record individually.
+     * Collects successful and failed operations, continuing to process remaining
+     * items even if some fail. Useful for bulk cleanup operations.
+     *
+     * @param  array  $ids  Array of record IDs to delete
+     * @return array Results with 'success' and 'failed' keys containing operation results
+     *
+     * @example
+     * // Delete multiple posts at once
+     * $results = StrapiWrapper::collection('posts')->batchDelete([1, 2, 3, 5, 8]);
+     * // $results['success'] contains successfully deleted record IDs
+     * // $results['failed'] contains IDs that failed with error messages
+     * @example
+     * // Clear cache after batch delete
+     * $results = StrapiWrapper::collection('posts')->batchDelete([1, 2, 3]);
+     * foreach ($results['success'] as $item) {
+     *     StrapiWrapper::collection('posts')->clearItemCache($item['id']);
+     * }
+     */
+    public function batchDelete(array $ids): array
+    {
+        $results = [
+            'success' => [],
+            'failed' => [],
+        ];
+
+        foreach ($ids as $index => $id) {
+            try {
+                $response = $this->delete($id);
+                $results['success'][] = [
+                    'index' => $index,
+                    'id' => $id,
+                    'status' => $response->status(),
+                ];
+            } catch (Exception $e) {
+                $results['failed'][] = [
+                    'index' => $index,
+                    'id' => $id,
+                    'error' => $e->getMessage(),
+                ];
+                $this->log(
+                    "Batch delete failed for record {$id} at index {$index}: ".$e->getMessage(),
+                    'error'
+                );
+            }
+        }
+
+        return $results;
+    }
 }
