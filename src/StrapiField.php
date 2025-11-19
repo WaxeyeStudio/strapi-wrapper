@@ -12,6 +12,32 @@ class StrapiField
 
     private array $linkedFilters = [];
 
+    /**
+     * Get array of valid comparison methods from StrapiFilter constants
+     */
+    private static function getValidComparisonMethods(): array
+    {
+        return [
+            StrapiFilter::Equals,
+            StrapiFilter::Not_Equal,
+            StrapiFilter::Less_than,
+            StrapiFilter::Less_than_equal,
+            StrapiFilter::Greater_than,
+            StrapiFilter::Greater_than_equal,
+            StrapiFilter::In_array,
+            StrapiFilter::No_in_array,
+            StrapiFilter::Contains,
+            StrapiFilter::Does_not_contain,
+            StrapiFilter::Contain_case_insensitive,
+            StrapiFilter::Does_not_contain_case_insensitive,
+            StrapiFilter::Is_null,
+            StrapiFilter::Is_not_null,
+            StrapiFilter::Between,
+            StrapiFilter::Starts_with,
+            StrapiFilter::Ends_with,
+        ];
+    }
+
     public function __construct(string $fieldName, StrapiCollection $collection)
     {
         $this->name = $fieldName;
@@ -42,6 +68,15 @@ class StrapiField
 
     public function filter($value, string $how = StrapiFilter::Equals): StrapiCollection
     {
+        $validMethods = self::getValidComparisonMethods();
+        
+        if (!in_array($how, $validMethods, true)) {
+            throw new \InvalidArgumentException(
+                "Invalid comparison method '{$how}'. Valid methods: " . 
+                implode(', ', $validMethods)
+            );
+        }
+        
         $this->filters[$how] = $value;
 
         return $this->collection;
