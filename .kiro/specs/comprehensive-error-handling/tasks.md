@@ -116,8 +116,8 @@
     - Pass context to UnknownError exception
     - _Requirements: 1.1, 1.2, 1.3, 1.4, 2.1, 2.2, 3.1_
 
-- [ ] 6. Refactor postMultipartRequest() error handling
-  - [ ] 6.1 Update 400 error handling in postMultipartRequest()
+- [x] 6. Refactor postMultipartRequest() error handling
+  - [x] 6.1 Update 400 error handling in postMultipartRequest()
     - Remove existing Log::error() call
     - Extract error message using extractErrorMessage()
     - Build context using buildRequestContext() with POST method
@@ -126,7 +126,7 @@
     - Pass context to BadRequest exception
     - _Requirements: 1.1, 1.2, 1.3, 2.2, 3.2_
   
-  - [ ] 6.2 Update UnknownError handling in postMultipartRequest()
+  - [x] 6.2 Update UnknownError handling in postMultipartRequest()
     - Extract error message using extractErrorMessage()
     - Build context using buildRequestContext() with POST method
     - Call logError() with appropriate level based on status code

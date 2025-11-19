@@ -103,19 +103,17 @@ class StrapiWrapper
 
             $response = $client->post($query, ['data' => $content['data']]);
             if (! $response->ok()) {
-                $context = [
-                    'url' => $query,
-                    'status' => $response->status(),
-                    'response_body' => $response->body(),
-                ];
-
                 if ($response->status() === 400) {
-                    $json = $response->json();
-                    $this->log('Post error', 'error', $json);
-                    throw new BadRequest($query.' '.$json['error']['name'].' - '.$json['error']['message'], 400, null, null, true, $context);
+                    $errorMessage = $this->extractErrorMessage($response);
+                    $context = $this->buildRequestContext('POST', $query, $response);
+                    $this->logError($errorMessage, 'POST', $query, $response);
+                    throw new BadRequest($query.' '.$errorMessage, 400, null, null, false, $context);
                 }
 
-                throw new UnknownError('Error posting to strapi on '.$query, $response->status(), null, null, true, $context);
+                $errorMessage = $this->extractErrorMessage($response, 'Unknown error');
+                $context = $this->buildRequestContext('POST', $query, $response);
+                $this->logError($errorMessage, 'POST', $query, $response);
+                throw new UnknownError('['.$response->status().'] '.$query.' '.$errorMessage, $response->status(), null, null, false, $context);
             }
 
             return $response;
