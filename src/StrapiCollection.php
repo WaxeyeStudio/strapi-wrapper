@@ -277,9 +277,17 @@ class StrapiCollection extends StrapiWrapper
 
     private function storeCacheIndex($requestUrl): void
     {
+        $maxSize = config('strapi-wrapper.cache_index_max_size', 1000);
         $index = Cache::get($this->type, []);
         $index[] = $requestUrl;
-        Cache::put($this->type, array_unique($index), Config::get('strapi-wrapper.cache'));
+        $index = array_unique($index);
+
+        // If exceeds max size, remove oldest entries (first elements)
+        if (count($index) > $maxSize) {
+            $index = array_slice($index, -$maxSize);
+        }
+
+        Cache::put($this->type, $index, Config::get('strapi-wrapper.cache'));
     }
 
     /**
