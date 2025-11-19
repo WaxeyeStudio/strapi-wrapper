@@ -69,14 +69,14 @@ class StrapiField
     public function filter($value, string $how = StrapiFilter::Equals): StrapiCollection
     {
         $validMethods = self::getValidComparisonMethods();
-        
-        if (!in_array($how, $validMethods, true)) {
+
+        if (! in_array($how, $validMethods, true)) {
             throw new \InvalidArgumentException(
-                "Invalid comparison method '{$how}'. Valid methods: " . 
+                "Invalid comparison method '{$how}'. Valid methods: ".
                 implode(', ', $validMethods)
             );
         }
-        
+
         $this->filters[$how] = $value;
 
         return $this->collection;
