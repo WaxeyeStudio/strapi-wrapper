@@ -13,7 +13,9 @@ use SilentWeb\StrapiWrapper\Exceptions\UnknownError;
 class StrapiCollection extends StrapiWrapper
 {
     private const POPULATE_NONE = 'none';
+
     private const POPULATE_ALL = 'all';
+
     private const POPULATE_CUSTOM = 'custom';
 
     private array $collection = [];

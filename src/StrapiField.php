@@ -126,9 +126,12 @@ class StrapiField
                 // Check for deep filtering
                 $deep = explode('.', $this->name);
                 if (count($deep) > 1) {
-                    $builder[] = 'filters['.implode('][', $deep)."][$how]=".urlencode($value);
+                    // Encode each part of the deep field name
+                    $encodedDeep = array_map('urlencode', $deep);
+                    $builder[] = 'filters['.implode('][', $encodedDeep).']['.urlencode($how).']='.urlencode($value);
                 } else {
-                    $builder[] = 'filters['.$this->name."][$how]=".urlencode($value);
+                    // Encode field name, comparison method, and value
+                    $builder[] = 'filters['.urlencode($this->name).']['.urlencode($how).']='.urlencode($value);
                 }
             }
         }
