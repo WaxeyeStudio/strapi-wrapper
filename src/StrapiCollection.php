@@ -90,7 +90,7 @@ class StrapiCollection extends StrapiWrapper
         $this->limit = $oldLimit;
 
         // Squash the results if required.
-        if (isset($result[0])) {
+        if (!empty($result)) {
             // We also want to store in item cache if required by item ID
             if ($cache) {
                 // First we work on the assumption that there is an "id" field.
@@ -335,7 +335,7 @@ class StrapiCollection extends StrapiWrapper
         $this->type .= $customType;
         $response = $this->query($cache);
         $this->type = $usualType;
-        if (count($response) === 1 && isset($response[0])) {
+        if (!empty($response) && count($response) === 1) {
             return $response[0];
         }
 
