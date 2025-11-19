@@ -449,6 +449,57 @@ class StrapiWrapper
         }
     }
 
+    /**
+     * Log error with appropriate severity level and sanitized context.
+     *
+     * This method handles all error logging with severity-based log levels. It builds
+     * comprehensive request context, sanitizes sensitive data, and determines the appropriate
+     * log level based on HTTP status code. Only logs if debug logging is enabled.
+     *
+     * @param  string  $message  The error message to log
+     * @param  string  $method  The HTTP method (GET, POST, etc.)
+     * @param  string  $url  The full request URL
+     * @param  Response|null  $response  The HTTP response object (null for connection errors)
+     * @param  array|null  $requestBody  The request body data (null for GET requests)
+     * @param  array  $additionalContext  Additional context to include in the log
+     * @return void
+     */
+    protected function logError(
+        string $message,
+        string $method,
+        string $url,
+        ?Response $response = null,
+        ?array $requestBody = null,
+        array $additionalContext = []
+    ): void {
+        // Only log if debug logging is enabled
+        if (! $this->debugLoggingEnabled) {
+            return;
+        }
+
+        // Build request context
+        $context = $this->buildRequestContext($method, $url, $response, $requestBody, $additionalContext);
+
+        // Sanitize sensitive data
+        $context = $this->sanitizeLogData($context);
+
+        // Determine log level based on status code
+        $level = 'error'; // Default to error
+        if ($response !== null) {
+            $status = $response->status();
+            if ($status >= 500) {
+                $level = 'error';
+            } elseif ($status >= 400 && $status < 500) {
+                $level = 'debug';
+            } elseif ($status >= 300 && $status < 400) {
+                $level = 'debug';
+            }
+        }
+
+        // Log with determined level
+        Log::log($level, $message, $context);
+    }
+
     protected function postRequest($query, $content): PromiseInterface|Response
     {
         if ($this->apiVersion >= 4) {

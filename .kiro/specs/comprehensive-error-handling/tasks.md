@@ -25,8 +25,8 @@
     - Only return fallback if response is empty AND status is 500+
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5_
 
-- [ ] 2. Enhance logging method with severity-based logging
-  - [ ] 2.1 Create logError() method in StrapiWrapper
+- [x] 2. Enhance logging method with severity-based logging
+  - [x] 2.1 Create logError() method in StrapiWrapper
     - Create protected method accepting message, method, URL, response, request body, and additional context
     - Call buildRequestContext() to build context
     - Call sanitizeLogData() to sanitize context
