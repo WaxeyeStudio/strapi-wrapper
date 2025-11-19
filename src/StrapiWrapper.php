@@ -291,6 +291,164 @@ class StrapiWrapper
 
     }
 
+    /**
+     * Build comprehensive request context for logging.
+     *
+     * Creates a structured array containing all relevant information about an HTTP request
+     * and response for debugging purposes. Handles null responses and request bodies gracefully.
+     *
+     * @param  string  $method  The HTTP method (GET, POST, etc.)
+     * @param  string  $url  The full request URL
+     * @param  Response|null  $response  The HTTP response object (null for connection errors)
+     * @param  array|null  $requestBody  The request body data (null for GET requests)
+     * @param  array  $additionalContext  Additional context to include in the log
+     * @return array Structured context array for logging
+     */
+    protected function buildRequestContext(
+        string $method,
+        string $url,
+        ?Response $response = null,
+        ?array $requestBody = null,
+        array $additionalContext = []
+    ): array {
+        $context = [
+            'timestamp' => now()->toIso8601String(),
+            'method' => $method,
+            'url' => $url,
+            'auth_method' => $this->authMethod,
+        ];
+
+        // Add response information if available
+        if ($response !== null) {
+            $context['status'] = $response->status();
+            $responseBody = $response->body();
+            $context['response_size'] = strlen($responseBody);
+
+            // Truncate response body if longer than 1000 characters
+            if (strlen($responseBody) > 1000) {
+                $context['response_body'] = substr($responseBody, 0, 1000).' [truncated]';
+            } else {
+                $context['response_body'] = $responseBody;
+            }
+        }
+
+        // Add request body if provided
+        if ($requestBody !== null) {
+            $context['request_body'] = $requestBody;
+        }
+
+        // Merge additional context
+        return array_merge($context, $additionalContext);
+    }
+
+    /**
+     * Sanitize sensitive data from log context.
+     *
+     * Recursively processes arrays to remove or mask sensitive information like authentication
+     * tokens, passwords, and API keys. Preserves the structure and all non-sensitive data
+     * for debugging purposes.
+     *
+     * @param  array  $data  The data array to sanitize
+     * @return array The sanitized array with sensitive values redacted
+     */
+    protected function sanitizeLogData(array $data): array
+    {
+        $sensitiveKeys = ['token', 'jwt', 'authorization', 'password', 'secret'];
+
+        foreach ($data as $key => $value) {
+            // Check if this is a sensitive key
+            $keyLower = strtolower($key);
+            $isSensitive = false;
+
+            foreach ($sensitiveKeys as $sensitiveKey) {
+                if (str_contains($keyLower, $sensitiveKey)) {
+                    $isSensitive = true;
+                    break;
+                }
+            }
+
+            if ($isSensitive) {
+                // Special handling for Bearer tokens - mask all but last 4 characters
+                if (is_string($value) && str_starts_with($value, 'Bearer ')) {
+                    $token = substr($value, 7); // Remove 'Bearer ' prefix
+                    if (strlen($token) > 4) {
+                        $data[$key] = 'Bearer ****'.substr($token, -4);
+                    } else {
+                        $data[$key] = '[REDACTED]';
+                    }
+                } else {
+                    $data[$key] = '[REDACTED]';
+                }
+            } elseif (is_array($value)) {
+                // Recursively sanitize nested arrays
+                $data[$key] = $this->sanitizeLogData($value);
+            }
+        }
+
+        return $data;
+    }
+
+    /**
+     * Extract meaningful error message from Strapi response.
+     *
+     * Attempts to parse the response body as JSON and extract error messages from Strapi's
+     * error structure (v4/v5 format). Handles multiple error formats and combines multiple
+     * errors when present. Falls back to raw response body or provided fallback message.
+     *
+     * @param  Response  $response  The HTTP response object
+     * @param  string  $fallback  Fallback message if no error message can be extracted
+     * @return string The extracted or fallback error message
+     */
+    protected function extractErrorMessage(Response $response, string $fallback = 'Unknown error'): string
+    {
+        $body = $response->body();
+
+        // If response is empty and status is 500+, use fallback
+        if (empty($body) && $response->status() >= 500) {
+            return $fallback;
+        }
+
+        // Try to parse as JSON
+        try {
+            $json = json_decode($body, true, 512, JSON_THROW_ON_ERROR);
+
+            // Check for Strapi v4/v5 error format: error.message
+            if (isset($json['error']['message'])) {
+                $message = $json['error']['message'];
+
+                // Check for multiple errors in error.details.errors
+                if (isset($json['error']['details']['errors']) && is_array($json['error']['details']['errors'])) {
+                    $errorMessages = [];
+                    foreach ($json['error']['details']['errors'] as $error) {
+                        if (isset($error['message'])) {
+                            $errorMessages[] = $error['message'];
+                        }
+                    }
+
+                    if (! empty($errorMessages)) {
+                        return $message.': '.implode('; ', $errorMessages);
+                    }
+                }
+
+                return $message;
+            }
+
+            // If JSON parsed but no error.message, return raw body (truncated)
+            if (strlen($body) > 1000) {
+                return substr($body, 0, 1000).' [truncated]';
+            }
+
+            return $body;
+        } catch (\JsonException $e) {
+            // JSON parsing failed, return raw response body (truncated)
+            if (strlen($body) > 1000) {
+                return substr($body, 0, 1000).' [truncated]';
+            }
+
+            return $body ?: $fallback;
+        }
+    }
+
     protected function postRequest($query, $content): PromiseInterface|Response
     {
         if ($this->apiVersion >= 4) {
