@@ -1,8 +1,13 @@
 {
   "name": "silentweb/strapi-wrapper",
-  "version": "5.0.5",
+  "version": "5.0.6",
   "description": "A Laravel Wrapper for Strapi",
-  "keywords": ["SilentWeb", "laravel", "strapi", "strapi-wrapper"],
+  "keywords": [
+    "SilentWeb",
+    "laravel",
+    "strapi",
+    "strapi-wrapper"
+  ],
   "homepage": "https://lab.silentweb.nz/silentweb/strapi-wrapper",
   "license": "MIT",
   "authors": [
@@ -49,7 +54,9 @@
   },
   "extra": {
     "laravel": {
-      "providers": ["SilentWeb\\StrapiWrapper\\StrapiWrapperServiceProvider"],
+      "providers": [
+        "SilentWeb\\StrapiWrapper\\StrapiWrapperServiceProvider"
+      ],
       "aliases": {
         "StrapiWrapper": "SilentWeb\\StrapiWrapper\\Facades\\StrapiWrapper"
       }

@@ -7,6 +7,7 @@ use GuzzleHttp\Promise\PromiseInterface;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Log;
 use JsonException;
 use SilentWeb\StrapiWrapper\Exceptions\UnknownError;
 
@@ -288,17 +289,24 @@ class StrapiCollection extends StrapiWrapper
 
     private function storeCacheIndex($requestUrl): void
     {
-        $maxSize = config('strapi-wrapper.cache_index_max_size', 1000);
-        $index = Cache::get($this->type, []);
-        $index[] = $requestUrl;
-        $index = array_unique($index);
+        try{
+            $maxSize = config('strapi-wrapper.cache_index_max_size', 1000);
+            $index = Cache::get($this->type, []);
+            $index[] = $requestUrl;
+            $index = array_unique($index);
 
-        // If exceeds max size, remove oldest entries (first elements)
-        if (count($index) > $maxSize) {
-            $index = array_slice($index, -$maxSize);
+            // If exceeds max size, remove oldest entries (first elements)
+            if (count($index) > $maxSize) {
+                $index = array_slice($index, -$maxSize);
+            }
+
+            Cache::put($this->type, $index, Config::get('strapi-wrapper.cache'));
+        } catch (\Exception $e) {
+            $this->log('Failed to store cache index for '.json_encode($this->type).': '.$e->getMessage(), 'warning', [
+                'exception' => get_class($e),
+                'trace' => $e->getTraceAsString(),
+            ]);
         }
-
-        Cache::put($this->type, $index, Config::get('strapi-wrapper.cache'));
     }
 
     /**
