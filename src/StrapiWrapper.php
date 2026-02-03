@@ -107,13 +107,23 @@ class StrapiWrapper
                     $errorMessage = $this->extractErrorMessage($response);
                     $context = $this->buildRequestContext('POST', $query, $response);
                     $this->logError($errorMessage, 'POST', $query, $response);
-                    throw new BadRequest($query.' '.$errorMessage, 400, null, null, false, $context);
+                    throw new BadRequest(
+                        message: $query.' '.$errorMessage,
+                        code: 400,
+                        previous: null,
+                        context: $context
+                    );
                 }
 
                 $errorMessage = $this->extractErrorMessage($response, 'Unknown error');
                 $context = $this->buildRequestContext('POST', $query, $response);
                 $this->logError($errorMessage, 'POST', $query, $response);
-                throw new UnknownError('['.$response->status().'] '.$query.' '.$errorMessage, $response->status(), null, null, false, $context);
+                throw new UnknownError(
+                    message: '['.$response->status().'] '.$query.' '.$errorMessage,
+                    code: $response->status(),
+                    previous: null,
+                    context: $context
+                );
             }
 
             return $response;
@@ -192,20 +202,35 @@ class StrapiWrapper
                     $errorMessage = $this->extractErrorMessage($login);
                     $context = $this->buildRequestContext('POST', $url, $login);
                     $this->logError($errorMessage, 'POST', $url, $login);
-                    throw new PermissionDenied($url.' '.$errorMessage, $login->status(), null, null, false, $context);
+                    throw new PermissionDenied(
+                        message: $url . ' ' . $errorMessage,
+                        code: $login->status(),
+                        previous: null,
+                        context: $context
+                    );
                 }
 
                 if ($login->status() === 400) {
                     $errorMessage = $this->extractErrorMessage($login);
                     $context = $this->buildRequestContext('POST', $url, $login);
                     $this->logError($errorMessage, 'POST', $url, $login);
-                    throw new BadRequest($url.' '.$errorMessage, 400, null, null, false, $context);
+                    throw new BadRequest(
+                        message: $url . ' ' . $errorMessage,
+                        code: 400,
+                        previous: null,
+                        context: $context
+                    );
                 }
 
                 $errorMessage = $this->extractErrorMessage($login, 'Unknown error');
                 $context = $this->buildRequestContext('POST', $url, $login);
                 $this->logError($errorMessage, 'POST', $url, $login);
-                throw new UnknownError('['.$login->status().'] '.$url.' '.$errorMessage, $login->status(), null, null, false, $context);
+                throw new UnknownError(
+                    message: '[' . $login->status() . '] ' . $url . ' ' . $errorMessage,
+                    code: $login->status(),
+                    previous: null,
+                    context: $context
+                );
             }
 
             throw new \RuntimeException('Error initialising strapi wrapper');
@@ -552,13 +577,23 @@ class StrapiWrapper
                 $errorMessage = $this->extractErrorMessage($response);
                 $context = $this->buildRequestContext('POST', $query, $response, $content);
                 $this->logError($errorMessage, 'POST', $query, $response, $content);
-                throw new BadRequest($query.' '.$errorMessage, 400, null, null, false, $context);
+                throw new BadRequest(
+                    message: $query . ' ' . $errorMessage,
+                    code: 400,
+                    previous: null,
+                    context: $context
+                );
             }
 
             $errorMessage = $this->extractErrorMessage($response, 'Unknown error');
             $context = $this->buildRequestContext('POST', $query, $response, $content);
             $this->logError($errorMessage, 'POST', $query, $response, $content);
-            throw new UnknownError('['.$response->status().'] '.$query.' '.$errorMessage, $response->status(), null, null, false, $context);
+            throw new UnknownError(
+                message: '[' . $response->status() . '] ' . $query . ' ' . $errorMessage,
+                code: $response->status(),
+                previous: null,
+                context: $context
+            );
         }
 
         // Log successful response
@@ -618,27 +653,47 @@ class StrapiWrapper
             $errorMessage = $this->extractErrorMessage($response);
             $context = $this->buildRequestContext('GET', $request, $response);
             $this->logError($errorMessage, 'GET', $request, $response);
-            throw new BadRequest($request.' '.$errorMessage, 400, null, null, false, $context);
+            throw new BadRequest(
+                message: $request . ' ' . $errorMessage,
+                code: 400,
+                previous: null,
+                context: $context
+            );
         }
 
         if ($response->status() === 404) {
             $errorMessage = $this->extractErrorMessage($response);
             $context = $this->buildRequestContext('GET', $request, $response);
             $this->logError($errorMessage, 'GET', $request, $response);
-            throw new NotFoundError($request.' '.$errorMessage, 404, null, null, false, $context);
+            throw new NotFoundError(
+                message: $request . ' ' . $errorMessage,
+                code: 404,
+                previous: null,
+                context: $context
+            );
         }
 
         if ($response->status() === 401 || $response->status() === 403) {
             $errorMessage = $this->extractErrorMessage($response);
             $context = $this->buildRequestContext('GET', $request, $response);
             $this->logError($errorMessage, 'GET', $request, $response);
-            throw new PermissionDenied($request.' '.$errorMessage, $response->status(), null, null, false, $context);
+            throw new PermissionDenied(
+                message: $request . ' ' . $errorMessage,
+                code: $response->status(),
+                previous: null,
+                context: $context
+            );
         }
 
         $errorMessage = $this->extractErrorMessage($response, 'Unknown error');
         $context = $this->buildRequestContext('GET', $request, $response);
         $this->logError($errorMessage, 'GET', $request, $response);
-        throw new UnknownError('['.$response->status().'] '.$request.' '.$errorMessage, $response->status(), null, null, false, $context);
+        throw new UnknownError(
+            message: '[' . $response->status() . '] ' . $request . ' ' . $errorMessage,
+            code: $response->status(),
+            previous: null,
+            context: $context
+        );
     }
 
     protected function generateQueryUrl(string $type, string|array $sortBy, string $sortOrder, int $limit, int $page, string $customQuery = ''): string
